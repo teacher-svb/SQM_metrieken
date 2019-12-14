@@ -13,15 +13,31 @@ import metrieken;
 public void printLLOCForProjectFiles() {
    	set[loc] files = javaBestanden(|project://hsqldb/|);
    	
+	int total = 0;
 	for (a <- files) { 
 		Declaration decl = createAstFromFile(a, false);
 		int count = calcLLOC(decl);
 		println("<a>: <count>");
+		total += count;
 	}
+	println("project total LLOCs: <total>");
+}
+
+
+public void printPLOCForProjectFiles() {
+   	set[loc] files = javaBestanden(|project://hsqldb/|);
+   	
+	int total = 0;
+	for (a <- files) { 
+		int count = calcPLOC(a);
+		println("<a>: <count> ");
+		total += count;
+	}
+	println("project total PLOCs: <total>");
 }
 
 public void printLLOCForMethods() {
-   	set[loc] files = javaBestanden(|project://hsqldb/|);
+   	set[loc] files = javaBestanden(|project://smallsql/|);
    	
 	for (a <- files) { 
 		Declaration decl = createAstFromFile(a, false);
@@ -49,17 +65,6 @@ public void calcMethodLLOC(Declaration decl) {
 	println("<decl.name>: <count>");
 }
 
-
-
-public void printPLOCForProjectFiles() {
-   	set[loc] files = javaBestanden(|project://hsqldb/|);
-   	
-   	int counter = 0;
-	for (a <- files) { 
-		int count = calcPLOC(a);
-		println("<a>: PLOC: <count> ");
-	}
-}
 
 public void printPLOCForMethods() {
    	set[loc] files = javaBestanden(|project://smallsql/|);
