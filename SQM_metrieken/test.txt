@@ -1,0 +1,4 @@
+String test2 = "abc /* fake comment*/";
+String cde = "this is a test";//an inline comment
+String efg = "ciccio"; /*this is a 
+        weird comment*/ String hil = "pluto";

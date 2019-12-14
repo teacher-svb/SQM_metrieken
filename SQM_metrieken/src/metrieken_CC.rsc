@@ -55,7 +55,7 @@ public int CalcComplexity(Statement impl) {
 }
 
 public void printComplexity() {
-   set[loc] files = javaBestanden(|project://SQM_metrieken/JabberPoint|);
+   set[loc] files = javaBestanden(|project://hsqldb/|);
    set[Declaration] decls = createAstsFromFiles(files, false);
    visit(decls) {  
       case \method(_, name, _, _, impl): {

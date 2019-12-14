@@ -6,3 +6,4 @@ META-INF/*
 build.properties
 /JabberPoint/
 /smallsql/
+/hsqldb/
