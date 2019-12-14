@@ -68,37 +68,37 @@ public int calcPLOC(loc file) {
 	bool multilineStarted = false;
 	for (l <- lines) {
 		switch(l) {
-			case /".*\/\*.*?\*\/"/: { // multiline comment in string, so count
-				int counter = 0;
+			case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored
+				;
 			}
-			case /".*\/\/.*"/: {  // single line comment in string, so count
-				int counter = 0;
+			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored
+				;
 			}
-			case /^\s*\/\/.*$/: {
+			case /^\s*\/\/.*$/: {  // single line comment, count as ignored
 				linesIgnored += 1;
 			}
-			case /^\s*\/\*.*\*\/\s*$/: { // multiline comment on one line, dont count
+			case /^\s*\/\*.*\*\/\s*$/: { // multiline comment on one line, count as ignored
 				linesIgnored += 1;
 			}
-			case /^\s*\/\*/: { // multiline comment start, dont count
+			case /^\s*\/\*/: { // multiline comment start, count as ignored
 				multilineStarted = true;
 				linesIgnored += 1;
 			}
-			case /\*\/\s*$/: { // multiline comment end, dont count
+			case /\*\/\s*$/: { // multiline comment end, count as ignored
 				multilineStarted = false;
 				linesIgnored += 1;
 			}
-			case /\/\*/: { // multiline comment start after code, so count
+			case /\/\*/: { // multiline comment start after code, so should not be ignored
 				multilineStarted = true;
 			}
-			case /\*\//: { // multiline comment end before code, so count
+			case /\*\//: { // multiline comment end before code, so should not be ignored
 				multilineStarted = false;
 			}
-			case /^\s*$/: {
-				linesIgnored += 1;
+			case /^\s*$/: { // empty line, count as ignored
+				linesIgnored += 1; 
 			}
 			case /./: {
-				if (multilineStarted) {
+				if (multilineStarted) {  // line in between a multiline start and a multiline end, count as ignored
 					linesIgnored += 1;
 				}
 			}
