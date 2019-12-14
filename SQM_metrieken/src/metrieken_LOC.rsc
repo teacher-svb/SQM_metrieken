@@ -52,12 +52,37 @@ public void calcMethodLLOC(Declaration decl) {
 
 
 public void printPLOCForProjectFiles() {
-   	set[loc] files = javaBestanden(|project://smallsql/|);
+   	set[loc] files = javaBestanden(|project://hsqldb/|);
    	
    	int counter = 0;
 	for (a <- files) { 
 		int count = calcPLOC(a);
 		println("<a>: PLOC: <count> ");
+	}
+}
+
+public void printPLOCForMethods() {
+   	set[loc] files = javaBestanden(|project://smallsql/|);
+   	
+	for (a <- files) { 
+		Declaration decl = createAstFromFile(a, false);
+		
+		visit(decl) {
+			case \class(_, _, _, list[Declaration] body): {
+				for (b <- body) {
+					switch(b) {
+						case \method(_, _, _, _, _): {
+							int count = calcPLOC(b.src);
+							println("<b.name>(<b.src>): PLOC: <count> ");
+						}
+						case \constructor(_, _, _, _): {
+							int count = calcPLOC(b.src);
+							println("<b.name>(<b.src>): PLOC: <count> ");
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
