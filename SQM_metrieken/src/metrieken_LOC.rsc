@@ -92,11 +92,12 @@ public int calcPLOC(loc file) {
 	int linesIgnored = 0;
 	bool multilineStarted = false;
 	for (l <- lines) {
+		// note: the order of cases is important. 
 		switch(l) {
-			case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored
+			case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored (cases can not be empty in rascal)
 				;
 			}
-			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored
+			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal)
 				;
 			}
 			case /^\s*\/\/.*$/: {  // single line comment, count as ignored
