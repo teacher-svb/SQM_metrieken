@@ -10,34 +10,23 @@ import metrieken;
 
 
 
-public void printLLOCForProjectFiles() {
+public lrel[loc, int] printLLOCForProjectFiles() {
    	set[loc] files = javaBestanden(|project://hsqldb/|);
-   	
-	int total = 0;
-	for (a <- files) { 
-		Declaration decl = createAstFromFile(a, false);
-		int count = calcLLOC(decl);
-		println("<a>: <count>");
-		total += count;
-	}
-	println("project total LLOCs: <total>");
+	
+	return [<a, calcLLOC(createAstFromFile(a, false))> | a <- files];
 }
 
 
-public void printPLOCForProjectFiles() {
+public lrel[loc, int] printPLOCForProjectFiles() {
    	set[loc] files = javaBestanden(|project://hsqldb/|);
-   	
-	int total = 0;
-	for (a <- files) { 
-		int count = calcPLOC(a);
-		println("<a>: <count> ");
-		total += count;
-	}
-	println("project total PLOCs: <total>");
+	
+	return [<a, calcPLOC(a)> | a <- files];
 }
 
-public void printLLOCForMethods() {
+public lrel[loc, int] printLLOCForMethods() {
    	set[loc] files = javaBestanden(|project://smallsql/|);
+   	
+	lrel[loc, int] methodLLOCs = [];
    	
 	for (a <- files) { 
 		Declaration decl = createAstFromFile(a, false);
@@ -47,27 +36,24 @@ public void printLLOCForMethods() {
 				for (b <- body) {
 					switch(b) {
 						case \method(_, _, _, _, _): {
-							calcMethodLLOC(b);
+							methodLLOCs += <b.src, calcLLOC(b)>;
 						}
 						case \constructor(_, _, _, _): {
-							calcMethodLLOC(b);
+							methodLLOCs += <b.src, calcLLOC(b)>;
 						}
 					}
 				}
 			}
 		}
 	}
-}
-
-public void calcMethodLLOC(Declaration decl) {
-	int count = calcLLOC(decl);
-	count-=1;
-	println("<decl.name>: <count>");
+	return methodLLOCs;
 }
 
 
-public void printPLOCForMethods() {
+public lrel[loc, int] printPLOCForMethods() {
    	set[loc] files = javaBestanden(|project://smallsql/|);
+   	
+	lrel[loc, int] methodPLOCs = [];
    	
 	for (a <- files) { 
 		Declaration decl = createAstFromFile(a, false);
@@ -77,18 +63,18 @@ public void printPLOCForMethods() {
 				for (b <- body) {
 					switch(b) {
 						case \method(_, _, _, _, _): {
-							int count = calcPLOC(b.src);
-							println("<b.name>(<b.src>): PLOC: <count> ");
+							methodPLOCs += <b.src, calcPLOC(b.src)>;
 						}
 						case \constructor(_, _, _, _): {
-							int count = calcPLOC(b.src);
-							println("<b.name>(<b.src>): PLOC: <count> ");
+							methodPLOCs += <b.src, calcPLOC(b.src)>;
 						}
 					}
 				}
 			}
 		}
 	}
+	
+	return methodPLOCs;
 }
 
 public int calcPLOC(loc file) {
