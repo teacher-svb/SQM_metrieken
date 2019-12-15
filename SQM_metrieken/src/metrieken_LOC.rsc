@@ -50,7 +50,6 @@ public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 }
 
 
-<<<<<<< HEAD
 public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
 	lrel[loc, int] methodPLOCs = [];
    	
@@ -85,21 +84,6 @@ public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
 */
 public int calcPLOC(loc location) {
 	list[str] lines = readFileLines(location);
-=======
-
-public void printPLOCForProjectFiles() {
-   	set[loc] files = javaBestanden(|project://smallsql/|);
-   	
-   	int counter = 0;
-	for (a <- files) { 
-		int count = calcPLOC(a);
-		println("<a>: PLOC: <count> ");
-	}
-}
-
-public int calcPLOC(loc file) {
-	list[str] lines = readFileLines(file);
->>>>>>> parent of ed74b04... added PLOC for methods
 	int totalFileLines = size(lines);
 	int linesIgnored = 0;
 	bool multilineStarted = false;
