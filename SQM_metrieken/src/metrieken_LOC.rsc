@@ -157,7 +157,7 @@ public int calcPLOC(loc location) {
 			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
 				;
 			}
-			case /^\s*.*\s*\/\*.*\*\/\s*.*\s*$/: { // inline multiline comment (between two pieces of code on one line), so should not be ignored
+			case /^.*\/\*.*\*\/.*$/: { // inline multiline comment (between two pieces of code on one line), so should not be ignored
 				;
 			}
 			case /^\s*\/\/.*$/: {  // single line comment, count as ignored
