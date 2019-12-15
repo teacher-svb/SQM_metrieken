@@ -74,6 +74,7 @@ public Figure createLLOCTreeMap(set[loc] files) {
 		
 		// make a local copy of l1, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
 		loc l1copy = l1;
+		int s1copy = s1;
 		Color c = arbColor();
 		lrel[loc, int] methodLLOCs = calcLLOCForMethods({l1});
 		list[Figure] subfigures = [];
@@ -88,7 +89,7 @@ public Figure createLLOCTreeMap(set[loc] files) {
 			);
 		}
 		figures += box(vcat([treemap(subfigures)],shrink(0.9)), area(s1), fillColor(c), 
-			popup("<l1copy.file>")
+			popup("<l1copy.file> (<s1copy>)")
 		);
 	}
 	print(  " |\n");
