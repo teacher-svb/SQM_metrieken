@@ -5,7 +5,9 @@ import List;
 import ListRelation;
 import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
+
 import util::Resources;
+import util::Editors;
 
 import vis::Figure;
 import vis::Render;
@@ -81,11 +83,13 @@ public Figure createLLOCTreeMap(set[loc] files) {
 		for (<l2, s2> <- methodLLOCs) {
 			// make a local copy of l2, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
 			loc l2copy = l2;
+			int s2copy = s2;
 			subfigures += box(area(s2),fillColor(c), 
 				onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
-					println(l2copy);
+					edit(l2copy);
 					return true;
-				})
+				}), 
+				popup("<s2copy>")
 			);
 		}
 		figures += box(vcat([treemap(subfigures)],shrink(0.9)), area(s1), fillColor(c), 
