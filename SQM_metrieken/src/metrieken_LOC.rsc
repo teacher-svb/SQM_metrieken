@@ -17,7 +17,7 @@ import metrieken;
 public void printTest() {
 	set[loc] file = {|project://smallsql/src/smallsql/database/Command.java|};
 	
-	println("smallsql: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(file))>");
+	println("file PLOC: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(file))>");
 }
 
 public void printPLOC() {
@@ -40,8 +40,8 @@ public void showLLOCTreemaps() {
    	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
 	render("treemap smallsql", createLLOCTreeMap(smallsqlfiles));
 	
-   	/*set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
-	render("treemap hsqldb", createLLOCTreeMap(hsqldbfiles));*/
+   	set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
+	render("treemap hsqldb", createLLOCTreeMap(hsqldbfiles));
 }
 
 public Figure createLLOCTreeMap(set[loc] files) {
@@ -201,7 +201,7 @@ public int calcPLOC(loc location) {
 		print("\n");*/
 	}
 	
-	println("<location>: <totalFileLines - linesIgnored>");
+	//println("<location>: <totalFileLines - linesIgnored>");
 	return totalFileLines - linesIgnored;
 }
 
