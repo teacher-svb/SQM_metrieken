@@ -8,12 +8,11 @@ import lang::java::m3::AST;
 import util::Resources;
 
 import metrieken;
-
 public void printPLOC() {
    	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
-   	println("smallsql: <(0 | it + a | a <- range(calcPLOCForProjectFiles(smallsqlfiles)))>");
+   	println("smallsql: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(smallsqlfiles))>");
    	set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
-   	println("hsqldb: <(0 | it + a | a <- range(calcPLOCForProjectFiles(hsqldbfiles)))>");
+   	println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(hsqldbfiles))>");
 }
 
 public lrel[loc, int] calcLLOCForProjectFiles(set[loc] files) {
@@ -22,6 +21,14 @@ public lrel[loc, int] calcLLOCForProjectFiles(set[loc] files) {
 
 
 public lrel[loc, int] calcPLOCForProjectFiles(set[loc] files) {
+	/*lrel[loc, int] PLOCs = [<a, calcPLOC(a)> | a <- files];
+	
+	total = (0 | it + b | <a, b> <- PLOCs);
+	println("total PLOC: <total>"); // 23805
+	
+	total = sum(range(PLOCs));
+	println("total PLOC: <total>"); // 21313*/
+	
 	return [<a, calcPLOC(a)> | a <- files];
 }
 
