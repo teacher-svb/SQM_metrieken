@@ -2,30 +2,30 @@ module metrieken_LOC
 
 import IO;
 import List;
+import ListRelation;
 import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
 import util::Resources;
 
 import metrieken;
 
+public void printPLOC() {
+   	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
+   	println("smallsql: <(0 | it + a | a <- range(calcPLOCForProjectFiles(smallsqlfiles)))>");
+   	set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
+   	println("hsqldb: <(0 | it + a | a <- range(calcPLOCForProjectFiles(hsqldbfiles)))>");
+}
 
-
-public lrel[loc, int] printLLOCForProjectFiles() {
-   	set[loc] files = javaBestanden(|project://hsqldb/|);
-	
+public lrel[loc, int] calcLLOCForProjectFiles(set[loc] files) {
 	return [<a, calcLLOC(createAstFromFile(a, false))> | a <- files];
 }
 
 
-public lrel[loc, int] printPLOCForProjectFiles() {
-   	set[loc] files = javaBestanden(|project://hsqldb/|);
-	
+public lrel[loc, int] calcPLOCForProjectFiles(set[loc] files) {
 	return [<a, calcPLOC(a)> | a <- files];
 }
 
-public lrel[loc, int] printLLOCForMethods() {
-   	set[loc] files = javaBestanden(|project://smallsql/|);
-   	
+public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 	lrel[loc, int] methodLLOCs = [];
    	
 	for (a <- files) { 
@@ -50,9 +50,7 @@ public lrel[loc, int] printLLOCForMethods() {
 }
 
 
-public lrel[loc, int] printPLOCForMethods() {
-   	set[loc] files = javaBestanden(|project://smallsql/|);
-   	
+public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
 	lrel[loc, int] methodPLOCs = [];
    	
 	for (a <- files) { 
@@ -77,18 +75,25 @@ public lrel[loc, int] printPLOCForMethods() {
 	return methodPLOCs;
 }
 
-public int calcPLOC(loc file) {
-	list[str] lines = readFileLines(file);
+/**
+	function calcPLOC
+	returns the number of Physical Lines Of Code for a given location. Location can be a complete file or a file section.
+	Physical Lines Of Code were determined to be all separate lines of code, not including empty lines or comments.
+	\param location: the code that needs to be counted.
+	\return the number of Physical Lines of Code for the given location 
+*/
+public int calcPLOC(loc location) {
+	list[str] lines = readFileLines(location);
 	int totalFileLines = size(lines);
 	int linesIgnored = 0;
 	bool multilineStarted = false;
 	for (l <- lines) {
 		// note: the order of cases is important. 
 		switch(l) {
-			case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored (cases can not be empty in rascal)
+			case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
 				;
 			}
-			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal)
+			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
 				;
 			}
 			case /^\s*\/\/.*$/: {  // single line comment, count as ignored
@@ -125,6 +130,14 @@ public int calcPLOC(loc file) {
 }
 
 
+
+/**
+	function calcLLOC
+	returns the number of Logical Lines Of Code for a given declaration.
+	Logical Lines Of Code were determined to be codeblock headings (including class, try, catch and switch) and statements (including return, break and continue).
+	\param decl: the code that needs to be counted.
+	\return the number of Physical Lines of Code for the given location 
+*/
 public int calcLLOC(Declaration decl) {
 	int count = 0;
 	visit(decl) {  
@@ -146,6 +159,12 @@ public int calcLLOC(Declaration decl) {
   		case \break(): {
      		count+=1;
   		} 
+  		case \continue(_): {
+     		count+=1;
+  		} 
+  		case \continue(): {
+     		count+=1;
+  		} 
   		case \constructorCall(_, _, _): {
      		count+=1;
   		} 
@@ -161,6 +180,23 @@ public int calcLLOC(Declaration decl) {
 		case \initializer(_): {
 			count += 1;
 		}
+		
+		case \block(_): {
+			count += 1;
+		}
+
+		case \switch(_, _): {
+			count += 1;
+		}
+		case \class(_): {
+			count += 1;
+		}
+		case \class(_, _, _, _): {
+			count += 1;
+		}
+		case \interface(_, _, _, _): {
+			count += 1;
+		}
 		case \throw(_): {
 			count += 1;
 		}
@@ -171,23 +207,6 @@ public int calcLLOC(Declaration decl) {
 			count += 1;
 		}                                        
 		case \catch(_, _): {
-			count += 1;
-		}
-		
-		case \block(_): {
-			count += 1;
-		}
-
-		case \class(_): {
-			count += 1;
-		}
-		case \switch(_, _): {
-			count += 1;
-		}
-		case \class(_, _, _, _): {
-			count += 1;
-		}
-		case \interface(_, _, _, _): {
 			count += 1;
 		}
 	}
