@@ -7,6 +7,10 @@ import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
 import util::Resources;
 
+import vis::Figure;
+import vis::Render;
+import vis::KeySym;
+
 import metrieken;
 public void printPLOC() {
    	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
@@ -30,6 +34,40 @@ public lrel[loc, int] calcPLOCForProjectFiles(set[loc] files) {
 	println("total PLOC: <total>"); // 21313*/
 	
 	return [<a, calcPLOC(a)> | a <- files];
+}
+
+
+public void renderTreeMap() {
+	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
+	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(smallsqlfiles);
+	
+	// not adding the filenames for now, as this causes a bug in rascal that doesn't display small boxes.
+	list[Figure] figures = [];
+	for (<l1, s1> <- LLOCs) {
+		
+		Color c = arbColor();
+		lrel[loc, int] methodLLOCs = calcLLOCForMethods({l1});
+		list[Figure] subfigures = [];
+		for (<l2, s2> <- methodLLOCs) {
+			loc l3 = l2;
+			subfigures += box(area(s2),fillColor(c), 
+			onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
+				println(l3);
+				return true;
+			}));
+		}
+		loc l3 = l1;
+		figures += box(vcat([treemap(subfigures)],shrink(0.9)), area(s1), fillColor(c), 
+			onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
+				println(l3);
+				return true;
+			})
+		);
+	}
+	
+	Figure mytreemap = treemap(figures);
+	
+	render("treemap", mytreemap);
 }
 
 public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
