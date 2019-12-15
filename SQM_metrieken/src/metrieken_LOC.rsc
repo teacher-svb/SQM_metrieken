@@ -12,6 +12,14 @@ import vis::Render;
 import vis::KeySym;
 
 import metrieken;
+
+
+public void printTest() {
+	set[loc] file = {|project://smallsql/src/smallsql/database/Money.java|};
+	
+	println("smallsql: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(file))>");
+}
+
 public void printPLOC() {
    	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
    	println("smallsql: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(smallsqlfiles))>");
@@ -25,26 +33,34 @@ public lrel[loc, int] calcLLOCForProjectFiles(set[loc] files) {
 
 
 public lrel[loc, int] calcPLOCForProjectFiles(set[loc] files) {
-	/*lrel[loc, int] PLOCs = [<a, calcPLOC(a)> | a <- files];
-	
-	total = (0 | it + b | <a, b> <- PLOCs);
-	println("total PLOC: <total>"); // 23805
-	
-	total = sum(range(PLOCs));
-	println("total PLOC: <total>"); // 21313*/
-	
 	return [<a, calcPLOC(a)> | a <- files];
 }
 
-
-public void renderTreeMap() {
-	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
-	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(smallsqlfiles);
+public void showLLOCTreemaps() {
+   	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
+	render("treemap smallsql", createLLOCTreeMap(smallsqlfiles));
 	
-	// not adding the filenames for now, as this causes a bug in rascal that doesn't display small boxes.
+   	/*set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
+	render("treemap hsqldb", createLLOCTreeMap(hsqldbfiles));*/
+}
+
+public Figure createLLOCTreeMap(set[loc] files) {
+	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(files);
+	
+	// not adding the filenames for now, as this causes a bug in rascal that doesn't display small boxes with text that is larger than the box.
 	list[Figure] figures = [];
+	
+	int max = size(LLOCs);
+	real counter = 0.0;
+	int oldValue = 0;
+	println("progress | ********** |");
+	print(  "         | ");
 	for (<l1, s1> <- LLOCs) {
-		
+		counter+=1;
+		if (100*counter/max > oldValue) {
+			print("*");
+			oldValue += 10;
+		}
 		Color c = arbColor();
 		lrel[loc, int] methodLLOCs = calcLLOCForMethods({l1});
 		list[Figure] subfigures = [];
@@ -64,10 +80,10 @@ public void renderTreeMap() {
 			})
 		);
 	}
+	print(  " |\n");
 	
 	Figure mytreemap = treemap(figures);
-	
-	render("treemap", mytreemap);
+	return mytreemap;
 }
 
 public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
@@ -141,6 +157,9 @@ public int calcPLOC(loc location) {
 			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
 				;
 			}
+			case /^\s*.*\s*\/\*.*\*\/\s*.*\s*$/: { // inline multiline comment (between two pieces of code on one line), so should not be ignored
+				;
+			}
 			case /^\s*\/\/.*$/: {  // single line comment, count as ignored
 				linesIgnored += 1;
 			}
@@ -171,6 +190,8 @@ public int calcPLOC(loc location) {
 			}
 		}
 	}
+	
+	println("<location>: <totalFileLines - linesIgnored>");
 	return totalFileLines - linesIgnored;
 }
 
