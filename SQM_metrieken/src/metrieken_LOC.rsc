@@ -48,32 +48,13 @@ public void showLLOCTreemaps() {
 
 public Figure createLLOCTreeMap(set[loc] files) {
 	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(files);
-	
-	// not adding the filenames for now, as this causes a bug in rascal that doesn't display small boxes with text that is larger than the box.
-	list[Figure] figures = [];
-	
-	// unnesessary bs code to show a progressbar in the terminal
-	int max = size(LLOCs);
-	real counter = 0.0;
-	int oldValue = 0;
-	println("progress | ********** |");
-	print(  "         | ");
-	
 
 	FProperty popup(str S){
-		return mouseOver(box(text(S), fillColor("lightyellow"),
-		grow(1.2),resizable(false)));
+		return mouseOver(box(text(S), fillColor("lightyellow"),grow(1.2),resizable(false)));
 	}
 	
+	list[Figure] figures = [];
 	for (<l1, s1> <- LLOCs) {
-	
-		// unnesessary bs code to show a progressbar in the terminal
-		counter+=1;
-		if (100*counter/max > oldValue) {
-			print("*");
-			oldValue += 10;
-		}
-		
 		// make a local copy of l1, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
 		loc l1copy = l1;
 		int s1copy = s1;
@@ -84,19 +65,31 @@ public Figure createLLOCTreeMap(set[loc] files) {
 			// make a local copy of l2, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
 			loc l2copy = l2;
 			int s2copy = s2;
-			subfigures += box(area(s2),fillColor(c), 
-				onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
-					edit(l2copy);
-					return true;
-				}), 
-				popup("<s2copy>")
-			);
+			subfigures += box(area(s2),
+							  fillColor(c), 
+							  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
+									edit(l2copy);
+									return true;
+							  }),
+						      mouseOver(box(text("<s2copy>"), 
+						   			 		fillColor("lightyellow"),
+						   			 		grow(1.2),
+						   			 		resizable(false)
+					   			 		)
+			   			      )
+						);
 		}
-		figures += box(vcat([treemap(subfigures)],shrink(0.9)), area(s1), fillColor(c), 
-			popup("<l1copy.file> (<s1copy>)")
-		);
+		figures += box(vcat([treemap(subfigures)],shrink(0.9)), 
+					   area(s1), 
+					   fillColor(c),
+					   mouseOver(box(text("<l1copy.file> (<s1copy>)"), 
+					   			 	 fillColor("lightyellow"),
+					   			 	 grow(1.2),
+					   			 	 resizable(false)
+				   			 	 )
+		   			   )
+				);
 	}
-	print(  " |\n");
 	
 	return treemap(figures);
 }
