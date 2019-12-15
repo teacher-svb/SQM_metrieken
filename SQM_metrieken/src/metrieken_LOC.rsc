@@ -40,8 +40,8 @@ public void showLLOCTreemaps() {
    	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
 	render("treemap smallsql", createLLOCTreeMap(smallsqlfiles));
 	
-   	set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
-	render("treemap hsqldb", createLLOCTreeMap(hsqldbfiles));
+   	/*set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
+	render("treemap hsqldb", createLLOCTreeMap(hsqldbfiles));*/
 }
 
 public Figure createLLOCTreeMap(set[loc] files) {
@@ -50,40 +50,50 @@ public Figure createLLOCTreeMap(set[loc] files) {
 	// not adding the filenames for now, as this causes a bug in rascal that doesn't display small boxes with text that is larger than the box.
 	list[Figure] figures = [];
 	
+	// unnesessary bs code to show a progressbar in the terminal
 	int max = size(LLOCs);
 	real counter = 0.0;
 	int oldValue = 0;
 	println("progress | ********** |");
 	print(  "         | ");
+	
+
+	FProperty popup(str S){
+		return mouseOver(box(text(S), fillColor("lightyellow"),
+		grow(1.2),resizable(false)));
+	}
+	
 	for (<l1, s1> <- LLOCs) {
+	
+		// unnesessary bs code to show a progressbar in the terminal
 		counter+=1;
 		if (100*counter/max > oldValue) {
 			print("*");
 			oldValue += 10;
 		}
+		
+		// make a local copy of l1, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
+		loc l1copy = l1;
 		Color c = arbColor();
 		lrel[loc, int] methodLLOCs = calcLLOCForMethods({l1});
 		list[Figure] subfigures = [];
 		for (<l2, s2> <- methodLLOCs) {
-			loc l3 = l2;
+			// make a local copy of l2, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
+			loc l2copy = l2;
 			subfigures += box(area(s2),fillColor(c), 
-			onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
-				println(l3);
-				return true;
-			}));
+				onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
+					println(l2copy);
+					return true;
+				})
+			);
 		}
-		loc l3 = l1;
 		figures += box(vcat([treemap(subfigures)],shrink(0.9)), area(s1), fillColor(c), 
-			onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
-				println(l3);
-				return true;
-			})
+			popup("<l1copy.file>")
 		);
 	}
 	print(  " |\n");
 	
-	Figure mytreemap = treemap(figures);
-	return mytreemap;
+	return treemap(figures);
 }
 
 public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
