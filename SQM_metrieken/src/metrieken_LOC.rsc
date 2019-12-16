@@ -46,31 +46,40 @@ public void showLLOCTreemaps() {
 	render("treemap hsqldb", createLLOCTreeMap(hsqldbfiles));*/
 }
 
+/**
+	function createLLOCTreeMap
+	creates a treemap based on the LLOC value per file(main tree)/per method (subtree)
+	
+*/
 public Figure createLLOCTreeMap(set[loc] files) {
 	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(files);
-
-	FProperty popup(str S){
-		return mouseOver(box(text(S), fillColor("lightyellow"),grow(1.2),resizable(false)));
-	}
 	
 	list[Figure] figures = [];
 	for (<l1, s1> <- LLOCs) {
-		// make a local copy of l1, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
+		// make a local copy of l1 and s1, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
 		loc l1copy = l1;
 		int s1copy = s1;
+		
+		// generate an arbitrary color that will be used for both the file box and method subtree
 		Color c = arbColor();
 		lrel[loc, int] methodLLOCs = calcLLOCForMethods({l1});
 		list[Figure] subfigures = [];
+		
+		int subtreeArea = 0;
 		for (<l2, s2> <- methodLLOCs) {
-			// make a local copy of l2, to use in the popup (otherwise it will use the scoped var l1, and refer to the last value of l1)
+			subtreeArea += s2;
+			// make a local copy of l2 and s2, to use in the popup (otherwise it will use the scoped var l2, and refer to the last value of l1)
 			loc l2copy = l2;
 			int s2copy = s2;
+			// add a box to the subtree for every method. 
 			subfigures += box(area(s2),
 							  fillColor(c), 
+							  // clicking the box opens the file and selects the method
 							  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
 									edit(l2copy);
 									return true;
 							  }),
+							  // hovering over the box shows the LLOC count of that method
 						      mouseOver(box(text("<s2copy>"), 
 						   			 		fillColor("lightyellow"),
 						   			 		grow(1.2),
@@ -79,9 +88,28 @@ public Figure createLLOCTreeMap(set[loc] files) {
 			   			      )
 						);
 		}
-		figures += box(vcat([treemap(subfigures)],shrink(0.9)), 
+		// add a box to the subtree that shows how many LLOCs are NOT in a method
+		subfigures += box(area(s1 - subtreeArea),fillColor(interpolateColor(color("white"), c, 0.5)), 
+						  // clicking the box opens the file
+						  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
+								edit(l1copy);
+								return true;
+						  }),
+						  // hovering over the box shows the LLOC count of lines outside methods
+					      mouseOver(box(text("<s1 - subtreeArea>"), 
+						   			 		fillColor("lightyellow"),
+						   			 		grow(1.2),
+						   			 		resizable(false)
+					   			 		)
+		 		  		  )
+				  );
+						  
+	    // add a box to the main tree structure for every file
+	    // the subtree is added to this box
+		figures += box(vcat([treemap(subfigures)]), 
 					   area(s1), 
 					   fillColor(c),
+						  // hovering over the box shows the filename and LLOC count of that file
 					   mouseOver(box(text("<l1copy.file> (<s1copy>)"), 
 					   			 	 fillColor("lightyellow"),
 					   			 	 grow(1.2),
@@ -94,6 +122,14 @@ public Figure createLLOCTreeMap(set[loc] files) {
 	return treemap(figures);
 }
 
+/**
+	function calcLLOCForMethods
+	calculates the amount of Logical Lines Of Code for each method in a set of locations.
+*/
+
+// TODO: use m3
+// TODO: this function isn't necessary. SHould be replaced by a GetMethodsFromProject() function, that returns a set of methods
+// then this function can be merged with calcLLOCForProjectFiles()
 public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 	lrel[loc, int] methodLLOCs = [];
    	
@@ -119,6 +155,9 @@ public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 }
 
 
+// TODO: use m3
+// TODO: this function isn't necessary. SHould be replaced by a GetMethodsFromProject() function, that returns a set of methods
+// then this function can be merged with calcLLOCForProjectFiles()
 public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
 	lrel[loc, int] methodPLOCs = [];
    	

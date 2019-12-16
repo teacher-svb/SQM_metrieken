@@ -14,3 +14,4 @@ public set[loc] javaBestanden(loc project) {
    Resource r = getProject(project);
    return { a | /file(a) <- r, a.extension == "java" };
 }
+
