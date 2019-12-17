@@ -8,6 +8,7 @@ import lang::java::m3::AST;
 
 import util::Resources;
 import util::Editors;
+import util::Math;
 
 import vis::Figure;
 import vis::Render;
@@ -84,9 +85,11 @@ public Figure createLLOCTreeMap(loc project) {
 			// make a local copy of l2 and s2, to use in the popup (otherwise it will use the scoped var l2, and refer to the last value of l1)
 			loc l2copy = l2;
 			int s2copy = s2;
+			
+			
 			// add a box to the subtree for every method. 
 			subfigures += box(area(s2),
-							  fillColor(c), 
+							  fillColor(interpolateColor(color("green"), color("red"), arbReal())), 
 							  // clicking the box opens the file and selects the method
 							  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
 									edit(l2copy);
@@ -102,7 +105,7 @@ public Figure createLLOCTreeMap(loc project) {
 						);
 		}
 		// add a box to the subtree that shows how many LLOCs are NOT in a method
-		subfigures += box(area(s1 - subtreeArea),fillColor(interpolateColor(color("white"), c, 0.5)), 
+		subfigures += box(area(s1 - subtreeArea),fillColor(interpolateColor(color("white"), color("green"), 0.5)), 
 						  // clicking the box opens the file
 						  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
 								edit(l1copy);
@@ -119,9 +122,11 @@ public Figure createLLOCTreeMap(loc project) {
 						  
 	    // add a box to the main tree structure for every file
 	    // the subtree is added to this box
-		figures += box(vcat([treemap(subfigures)]), 
+		figures += box(vcat([treemap(subfigures)], shrink(0.9)), 
 					   area(s1), 
-					   fillColor(c),
+					   fillColor(color("white")),
+					   lineWidth(0),
+					   shrink(0.9),
 						  // hovering over the box shows the filename and LLOC count of that file
 					   mouseOver(box(text("<l1copy.file> (<s1copy>)"), 
 					   			 	 fillColor("lightyellow"),
@@ -295,7 +300,6 @@ public bool ignoreLine(str line) {
 	\return the number of Physical Lines of Code for the given location 
 */
 public int calcLLOC(Declaration decl) {
-	println(decl);
 	int count = 0;
 	visit(decl) {  
 		case \declarationStatement(_): {

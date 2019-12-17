@@ -18,7 +18,7 @@ public set[loc] javaBestanden(loc project) {
 }
 
 public void metrieken_test() {
-	set[loc] files = javaBestanden(|project://smallsql/|);
+	set[loc] files = javaBestanden(|project://hsqldb/|);
 	
 	list[str] linesPer6 = [];
 	for (fileloc <- files) {
