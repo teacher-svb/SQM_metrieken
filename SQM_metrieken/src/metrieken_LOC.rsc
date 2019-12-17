@@ -17,14 +17,14 @@ import vis::KeySym;
 import metrieken;
 
 
-public void printTest() {
-	set[loc] file = {|project://smallsql/src/smallsql/database/Command.java|};
-	
-	println("file PLOC: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(file))>");
-}
 
 public void printPLOC() {
-   	println("smallsql: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://smallsql/|))>");
+	lrel[loc, int] PLOC = calcPLOCForProjectFiles(|project://smallsql/|);
+   	println("smallsql: <(0 | it + b | <a,b> <- PLOC)>");
+   	
+   	for (<a, b> <- PLOC) {
+   		println("<a>: <b>");
+   	}
 
    	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
 }
@@ -48,6 +48,16 @@ public void showLLOCTreemaps() {
 public lrel[loc, int] calcLLOCForProjectFiles(loc project) {
    	set[loc] files = javaBestanden(project);
 	return [<a, calcLLOC(createAstFromFile(a, false))> | a <- files];
+}
+
+
+public void numUnits(loc project) {
+   	set[loc] files = javaBestanden(project);
+	int total = 0;
+	for (f <- files)  {
+		total += size(getMethods(f));
+	}
+	println(total);
 }
 
 
@@ -172,6 +182,28 @@ public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 	return methodLLOCs;
 }
 
+public list[Declaration] getMethods(loc file) {
+	list[Declaration] result = [];
+	Declaration decl = createAstFromFile(file, false);
+	
+	visit(decl) {
+		case \class(_, _, _, list[Declaration] body): {
+			for (b <- body) {
+				switch(b) {
+					case \method(_, _, _, _, _): {
+						result += b;
+					}
+					case \constructor(_, _, _, _): {
+						result += b;
+					}
+				}
+			}
+		}
+	}
+	
+	return result;
+}
+
 
 // TODO: use m3
 // TODO: this function isn't necessary. SHould be replaced by a GetMethodsFromProject() function, that returns a set of methods
@@ -209,18 +241,19 @@ public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
 	\return the number of Physical Lines of Code for the given location 
 */
 public int calcPLOC(loc location) {
+	print("*");
 	list[str] lines = readFileLines(location);
 	int totalFileLines = size(lines);
 	int linesIgnored = 0;
 	//bool multilineStarted = false;
 	for (l <- lines) {
 		l = filterLine(l);
-		if (l != "") {
+		if (l == "") {
 			linesIgnored += 1;
 		}
 	}
+	multilineStarted = false;
 	
-	//println("<location>: <totalFileLines - linesIgnored>");
 	return totalFileLines - linesIgnored;
 }
 
