@@ -18,25 +18,27 @@ public set[loc] javaBestanden(loc project) {
 }
 
 public void metrieken_test() {
-	set[loc] files = javaBestanden(|project://hsqldb/|);
+	set[loc] files = javaBestanden(|project://smallsql/|);
 	
 	list[str] linesPer6 = [];
 	for (fileloc <- files) {
-		print("*");
 		list[str] lines = readFileLines(fileloc);
 		list[str] result = [];
 		
 		for (l <- lines) {
-			if (ignoreLine(l) == false) {
+			l = filterLine(l);
+			if (l != "") {
+			
 				result += l;
 				if (size(result) >= 6) {
-					str resultstring = ("" | "<it>\n<s>" | s <- result);
+					str resultstring = ("" | "<it><s>" | s <- result);
 					linesPer6 += resultstring;
 					result = result[1..];
 				}
 			}
 		}
 	}
+	bool multilineStarted = false;
 	
 	int dupSearchSize = size(linesPer6);
 	map[str, int] distr = distribution(linesPer6);
@@ -50,81 +52,62 @@ public void metrieken_test() {
 	println(ratio);
 }
 
-
-
-
-
-
-
-
-
-// ------------------------------------------------------
-
-
-
 bool multilineStarted = false;
-public bool ignoreLine(str line) {
+public str filterLine(str line) {
 
 	str printstr = "          ";
 	// note: the order of cases is important. 
 	switch(line) {
 		case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
-			;
-			return false;
+			if (multilineStarted == false)
+				return line;
 		}
 		case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
-			;
-			return false;
+			if (multilineStarted == false)
+				return line;
+		}
+		case /^\s*<part1:.*?>\s*\/\/.*$/: {  // single line comment after code, so should not be ignored
+			if (multilineStarted == false)
+				return part1;
 		}
 		case /^\s*\/\/.*$/: {  // single line comment, count as ignored
-			printstr = "SL COMMENT";
-			return true;
+			return "";
 		}
 		case /^\s*\/\*.*\*\/\s*$/: { // multiline comment on one line, count as ignored
-			//linesIgnored += 1;
-			printstr = "ML COMMENT";
-			return true;
+			return "";
 		}
-		case /^.*\/\*.*\*\/.*$/: { // inline multiline comment (between two pieces of code on one line), so should not be ignored
-			;
-			return false;
+		case /^\s*<part1:.*?>\s*\/\*.*\*\/\s*<part2:.*?>\s*$/: { // inline multiline comment (between two pieces of code on one line), so should not be ignored
+			if (multilineStarted == false)
+				return part1 + part2;
 		}
 		case /^\s*\/\*/: { // multiline comment start, count as ignored
 			multilineStarted = true;
-			//linesIgnored += 1;
-			printstr = "ML CMT STR";
-			return true;
+			return "";
 		}
 		case /\*\/\s*$/: { // multiline comment end, count as ignored
 			multilineStarted = false;
-			//linesIgnored += 1;
-			printstr = "ML CMT END";
-			return true;
+			return "";
 		}
-		case /\/\*/: { // multiline comment start after code, so should not be ignored
+		case /\s*<part1:.*?>\s*\/\*/: { // multiline comment start after code, so should not be ignored
 			multilineStarted = true;
-			return false;
+			return part1;
 		}
-		case /\*\//: { // multiline comment end before code, so should not be ignored
+		case /\*\/\s*<part1:.*?>\s*/: { // multiline comment end before code, so should not be ignored
 			multilineStarted = false;
-			return false;
+			return part1;
 		}
 		case /^\s*$/: { // empty line, count as ignored
-			//linesIgnored += 1; 
-			printstr = "EMPTY LINE";
-			return true;
+			return "";
 		}
-		case /./: {
-			if (multilineStarted) {  // line in between a multiline start and a multiline end, count as ignored
-				//linesIgnored += 1;
-				printstr = "ML CMT ---";
-				return true;
+		case /^\s*<part1:.*>\s*$/: {
+			if (multilineStarted == false) {  // line in between a multiline start and a multiline end, count as ignored
+				return part1;
+			}
+			else {
+				return "";
 			}
 		}
 	}
-	bool multilineStarted = false;
-	// FOR DEBUGGING PURPOSES
-	/*print("<printstr><l>"); 
-	print("\n");*/
-	return false;
+	
+	return "";
 }
