@@ -23,27 +23,40 @@ public void printTest() {
 }
 
 public void printPLOC() {
-   	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
-   	println("smallsql: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(smallsqlfiles))>");
-   	set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
-   	println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(hsqldbfiles))>");
+   	println("smallsql: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://smallsql/|))>");
+
+   	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
 }
 
-public lrel[loc, int] calcLLOCForProjectFiles(set[loc] files) {
+public void printLLOC() {
+   	println("smallsql: <(0 | it + b | <a,b> <- calcLLOCForProjectFiles(|project://smallsql/|))>");
+
+   	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
+}
+
+public void showLLOCTreemaps() {
+	render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
+	
+	//render("treemap hsqldb", createLLOCTreeMap(|project://hsqldb/|));
+}
+
+/**
+	function calcLLOCForProjectFiles
+	calculates the LLOC for each file in a given project.
+*/
+public lrel[loc, int] calcLLOCForProjectFiles(loc project) {
+   	set[loc] files = javaBestanden(project);
 	return [<a, calcLLOC(createAstFromFile(a, false))> | a <- files];
 }
 
 
-public lrel[loc, int] calcPLOCForProjectFiles(set[loc] files) {
+/**
+	function calcLLOCForProjectFiles
+	calculates the PLOC for each file in a given project.
+*/
+public lrel[loc, int] calcPLOCForProjectFiles(loc project) { 
+   	set[loc] files = javaBestanden(project);
 	return [<a, calcPLOC(a)> | a <- files];
-}
-
-public void showLLOCTreemaps() {
-   	set[loc] smallsqlfiles = javaBestanden(|project://smallsql/|);
-	render("treemap smallsql", createLLOCTreeMap(smallsqlfiles));
-	
-   	/*set[loc] hsqldbfiles = javaBestanden(|project://hsqldb/|);
-	render("treemap hsqldb", createLLOCTreeMap(hsqldbfiles));*/
 }
 
 /**
@@ -51,8 +64,8 @@ public void showLLOCTreemaps() {
 	creates a treemap based on the LLOC value per file(main tree)/per method (subtree)
 	
 */
-public Figure createLLOCTreeMap(set[loc] files) {
-	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(files);
+public Figure createLLOCTreeMap(loc project) { 
+	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(project);
 	
 	list[Figure] figures = [];
 	for (<l1, s1> <- LLOCs) {
@@ -194,62 +207,82 @@ public int calcPLOC(loc location) {
 	list[str] lines = readFileLines(location);
 	int totalFileLines = size(lines);
 	int linesIgnored = 0;
-	bool multilineStarted = false;
+	//bool multilineStarted = false;
 	for (l <- lines) {
-		str printstr = "          ";
-		// note: the order of cases is important. 
-		switch(l) {
-			case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
-				;
-			}
-			case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
-				;
-			}
-			case /^\s*\/\/.*$/: {  // single line comment, count as ignored
-				linesIgnored += 1;
-				printstr = "SL COMMENT";
-			}
-			case /^\s*\/\*.*\*\/\s*$/: { // multiline comment on one line, count as ignored
-				linesIgnored += 1;
-				printstr = "ML COMMENT";
-			}
-			case /^.*\/\*.*\*\/.*$/: { // inline multiline comment (between two pieces of code on one line), so should not be ignored
-				;
-			}
-			case /^\s*\/\*/: { // multiline comment start, count as ignored
-				multilineStarted = true;
-				linesIgnored += 1;
-				printstr = "ML CMT STR";
-			}
-			case /\*\/\s*$/: { // multiline comment end, count as ignored
-				multilineStarted = false;
-				linesIgnored += 1;
-				printstr = "ML CMT END";
-			}
-			case /\/\*/: { // multiline comment start after code, so should not be ignored
-				multilineStarted = true;
-			}
-			case /\*\//: { // multiline comment end before code, so should not be ignored
-				multilineStarted = false;
-			}
-			case /^\s*$/: { // empty line, count as ignored
-				linesIgnored += 1; 
-				printstr = "EMPTY LINE";
-			}
-			case /./: {
-				if (multilineStarted) {  // line in between a multiline start and a multiline end, count as ignored
-					linesIgnored += 1;
-					printstr = "ML CMT ---";
-				}
-			}
+		if (ignoreLine(l)) {
+			linesIgnored += 1;
 		}
-		// FOR DEBUGGING PURPOSES
-		/*print("<printstr><l>"); 
-		print("\n");*/
 	}
 	
 	//println("<location>: <totalFileLines - linesIgnored>");
 	return totalFileLines - linesIgnored;
+}
+
+bool multilineStarted = false;
+public bool ignoreLine(str line) {
+
+	str printstr = "          ";
+	// note: the order of cases is important. 
+	switch(line) {
+		case /".*\/\*.*?\*\/"/: { // multiline comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
+			;
+			return false;
+		}
+		case /".*\/\/.*"/: {  // single line comment in string, so should not be ignored (cases can not be empty in rascal, so just used an empty statement)
+			;
+			return false;
+		}
+		case /^\s*\/\/.*$/: {  // single line comment, count as ignored
+			printstr = "SL COMMENT";
+			return true;
+		}
+		case /^\s*\/\*.*\*\/\s*$/: { // multiline comment on one line, count as ignored
+			//linesIgnored += 1;
+			printstr = "ML COMMENT";
+			return true;
+		}
+		case /^.*\/\*.*\*\/.*$/: { // inline multiline comment (between two pieces of code on one line), so should not be ignored
+			;
+			return false;
+		}
+		case /^\s*\/\*/: { // multiline comment start, count as ignored
+			multilineStarted = true;
+			//linesIgnored += 1;
+			printstr = "ML CMT STR";
+			return true;
+		}
+		case /\*\/\s*$/: { // multiline comment end, count as ignored
+			multilineStarted = false;
+			//linesIgnored += 1;
+			printstr = "ML CMT END";
+			return true;
+		}
+		case /\/\*/: { // multiline comment start after code, so should not be ignored
+			multilineStarted = true;
+			return false;
+		}
+		case /\*\//: { // multiline comment end before code, so should not be ignored
+			multilineStarted = false;
+			return false;
+		}
+		case /^\s*$/: { // empty line, count as ignored
+			//linesIgnored += 1; 
+			printstr = "EMPTY LINE";
+			return true;
+		}
+		case /./: {
+			if (multilineStarted) {  // line in between a multiline start and a multiline end, count as ignored
+				//linesIgnored += 1;
+				printstr = "ML CMT ---";
+				return true;
+			}
+		}
+	}
+	bool multilineStarted = false;
+	// FOR DEBUGGING PURPOSES
+	/*print("<printstr><l>"); 
+	print("\n");*/
+	return false;
 }
 
 
@@ -262,6 +295,7 @@ public int calcPLOC(loc location) {
 	\return the number of Physical Lines of Code for the given location 
 */
 public int calcLLOC(Declaration decl) {
+	println(decl);
 	int count = 0;
 	visit(decl) {  
 		case \declarationStatement(_): {
