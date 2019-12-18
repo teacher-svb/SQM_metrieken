@@ -14,32 +14,9 @@ import vis::Figure;
 import vis::Render;
 import vis::KeySym;
 
-import metrieken;
+import metrieken_util;
 
 
-
-public void printPLOC() {
-	lrel[loc, int] PLOC = calcPLOCForProjectFiles(|project://smallsql/|);
-   	println("smallsql: <(0 | it + b | <a,b> <- PLOC)>");
-   	
-   	for (<a, b> <- PLOC) {
-   		println("<a>: <b>");
-   	}
-
-   	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
-}
-
-public void printLLOC() {
-   	println("smallsql: <(0 | it + b | <a,b> <- calcLLOCForProjectFiles(|project://smallsql/|))>");
-
-   	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
-}
-
-public void showLLOCTreemaps() {
-	render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
-	
-	//render("treemap hsqldb", createLLOCTreeMap(|project://hsqldb/|));
-}
 
 /**
 	function calcLLOCForProjectFiles
@@ -51,13 +28,13 @@ public lrel[loc, int] calcLLOCForProjectFiles(loc project) {
 }
 
 
-public void numUnits(loc project) {
+public int numUnits(loc project) {
    	set[loc] files = javaBestanden(project);
 	int total = 0;
 	for (f <- files)  {
 		total += size(getMethods(f));
 	}
-	println(total);
+	return total;
 }
 
 
@@ -150,51 +127,26 @@ public Figure createLLOCTreeMap(loc project) {
 	return treemap(figures);
 }
 
-/**
-	function calcLLOCForMethods
-	calculates the amount of Logical Lines Of Code for each method in a set of locations.
-*/
 
 // TODO: use m3
-// TODO: this function isn't necessary. SHould be replaced by a GetMethodsFromProject() function, that returns a set of methods
-// then this function can be merged with calcLLOCForProjectFiles()
-public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
-	lrel[loc, int] methodLLOCs = [];
+public list[Declaration] getMethods(loc file) {
+	
+   	set[loc] files = javaBestanden(file);
    	
-	for (a <- files) { 
-		Declaration decl = createAstFromFile(a, false);
+	list[Declaration] result = [];
+   	for (f <- files) {	
+		Declaration decl = createAstFromFile(f, false);
 		
 		visit(decl) {
 			case \class(_, _, _, list[Declaration] body): {
 				for (b <- body) {
 					switch(b) {
 						case \method(_, _, _, _, _): {
-							methodLLOCs += <b.src, calcLLOC(b)>;
+							result += b;
 						}
 						case \constructor(_, _, _, _): {
-							methodLLOCs += <b.src, calcLLOC(b)>;
+							result += b;
 						}
-					}
-				}
-			}
-		}
-	}
-	return methodLLOCs;
-}
-
-public list[Declaration] getMethods(loc file) {
-	list[Declaration] result = [];
-	Declaration decl = createAstFromFile(file, false);
-	
-	visit(decl) {
-		case \class(_, _, _, list[Declaration] body): {
-			for (b <- body) {
-				switch(b) {
-					case \method(_, _, _, _, _): {
-						result += b;
-					}
-					case \constructor(_, _, _, _): {
-						result += b;
 					}
 				}
 			}
@@ -204,32 +156,54 @@ public list[Declaration] getMethods(loc file) {
 	return result;
 }
 
-
-// TODO: use m3
-// TODO: this function isn't necessary. SHould be replaced by a GetMethodsFromProject() function, that returns a set of methods
-// then this function can be merged with calcLLOCForProjectFiles()
-public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
-	lrel[loc, int] methodPLOCs = [];
-   	
+/**
+	function calcLLOCForMethods
+	calculates the amount of Logical Lines Of Code for each method in a set of locations.
+*/
+public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
+	lrel[loc, int] methodLLOCs = [];
+	
 	for (a <- files) { 
-		Declaration decl = createAstFromFile(a, false);
+		list[Declaration] methods = getMethods(a);
+		
+		for (m <- methods) {
+			methodLLOCs += <m.src, calcLLOC(m)>;
+		}
+		
+		/*Declaration decl = createAstFromFile(a, false);
 		
 		visit(decl) {
 			case \class(_, _, _, list[Declaration] body): {
 				for (b <- body) {
 					switch(b) {
 						case \method(_, _, _, _, _): {
-							methodPLOCs += <b.src, calcPLOC(b.src)>;
+							methodLLOCs += <b.src, calcLLOC(b)>;
 						}
 						case \constructor(_, _, _, _): {
-							methodPLOCs += <b.src, calcPLOC(b.src)>;
+							methodLLOCs += <b.src, calcLLOC(b)>;
 						}
 					}
 				}
 			}
+		}*/
+	}
+	return methodLLOCs;
+}
+
+
+// TODO: use m3
+// TODO: this function isn't necessary. SHould be replaced by a GetMethodsFromProject() function, that returns a set of methods
+// then this function can be merged with calcLLOCForProjectFiles()
+public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
+	lrel[loc, int] methodPLOCs = [];
+	
+	for (a <- files) { 
+		list[Declaration] methods = getMethods(a);
+		
+		for (m <- methods) {
+			methodPLOCs += <m.src, calcPLOC(m.src)>;
 		}
 	}
-	
 	return methodPLOCs;
 }
 
@@ -241,7 +215,7 @@ public lrel[loc, int] calcPLOCForMethods(set[loc] files) {
 	\return the number of Physical Lines of Code for the given location 
 */
 public int calcPLOC(loc location) {
-	print("*");
+	
 	list[str] lines = readFileLines(location);
 	int totalFileLines = size(lines);
 	int linesIgnored = 0;
