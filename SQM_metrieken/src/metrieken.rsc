@@ -26,7 +26,7 @@ lrel[int, str] unitComplexityScoreTable = [<0, "moderate">, <21, "high">, <50, "
 list[int] complexityScoreTableModerate = [0, 25, 30, 45, 50];
 list[int] complexityScoreTableHigh = [0, 5, 10, 15];
 list[int] complexityScoreTableVeryHigh = [0, 5];
-lrel[int moder, int high, int vhigh, str score] complexityScoreTable = [<0, 0, 0, "++">, <25, 0, 0, "+">, <30, 5, 0, "0">, <45, 10, 0, "-">, <50, 15, 5, "--">];
+lrel[int moder, int high, int vhigh, str score] complexityScoreTable = [<25, 0, 0, "++">, <30, 5, 0, "+">, <45, 10, 0, "0">, <50, 15, 5, "-">, <100, 100, 100, "--">];
 
 public void printResults() {
 	loc project = |project://smallsql/|;
@@ -58,9 +58,9 @@ public void printResults() {
 	int numHighUnitComplexity = 0;
 	// TODO: steven
 	int numVeryHighUnitComplexity = 0;
-	int ratioModerateUnitComplexity = 100 * numModerateUnitComplexity / numUnits;
-	int ratioHighUnitComplexity = 100 * numHighUnitComplexity / numUnits;
-	int ratioVeryHighUnitComplexity = 100 * numVeryHighUnitComplexity / numUnits;
+	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
+	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
+	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
 	println(ratioModerateUnitComplexity);
 	println(ratioHighUnitComplexity);
 	println(ratioVeryHighUnitComplexity);
@@ -69,11 +69,11 @@ public void printResults() {
    	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
    	str unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitPLOC])[1];
    	str unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitLLOC])[1];
-   	//max([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, a <= 0 ||  b <= 0 || c <= 0])[3];
-   	str complexityScore = max([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
-   										   a <= ratioModerateUnitComplexity || 
-   										   b <= ratioHighUnitComplexity || 
-   										   c <= ratioVeryHighUnitComplexity])[3];
+   	//min([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, (c >= 6 && b >= 0 && a >= 45)]);[3];
+   	str complexityScore = min([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
+   										   a >= ratioModerateUnitComplexity && 
+   										   b >= ratioHighUnitComplexity && 
+   										   c >= ratioVeryHighUnitComplexity])[3];
    	str duplicationScore = max([<a,b> | <a, b> <- duplicityScoreTable, a <= projectDuplication])[1];
 
    	str analyseScore = "";
