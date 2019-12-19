@@ -53,24 +53,28 @@ public void printResults() {
    	
    	println();
 	// TODO: steven
-	int numModerateUnitComplexity = 1;
+	int numModerateUnitComplexity = 0;
 	// TODO: steven
-	int numHighUnitComplexity = 1;
+	int numHighUnitComplexity = 0;
 	// TODO: steven
-	int numVeryHighUnitComplexity = 1;
-	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
-	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
-	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
+	int numVeryHighUnitComplexity = 0;
+	int ratioModerateUnitComplexity = 100 * numModerateUnitComplexity / numUnits;
+	int ratioHighUnitComplexity = 100 * numHighUnitComplexity / numUnits;
+	int ratioVeryHighUnitComplexity = 100 * numVeryHighUnitComplexity / numUnits;
+	println(ratioModerateUnitComplexity);
+	println(ratioHighUnitComplexity);
+	println(ratioVeryHighUnitComplexity);
 	
-   	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a < projectPLOC/1000])[1];
-   	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a < projectLLOC/1000])[1];
-   	str unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a < avgUnitPLOC])[1];
-   	str unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a < avgUnitLLOC])[1];
+   	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectPLOC/1000])[1];
+   	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
+   	str unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitPLOC])[1];
+   	str unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitLLOC])[1];
+   	//max([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, a <= 0 ||  b <= 0 || c <= 0])[3];
    	str complexityScore = max([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
-   										   a < ratioModerateUnitComplexity || 
-   										   b < ratioHighUnitComplexity || 
-   										   c < ratioVeryHighUnitComplexity])[3];
-   	str duplicationScore = max([<a,b> | <a, b> <- duplicityScoreTable, a < projectDuplication])[1];
+   										   a <= ratioModerateUnitComplexity || 
+   										   b <= ratioHighUnitComplexity || 
+   										   c <= ratioVeryHighUnitComplexity])[3];
+   	str duplicationScore = max([<a,b> | <a, b> <- duplicityScoreTable, a <= projectDuplication])[1];
 
    	str analyseScore = "";
    	str changeScore = "";
