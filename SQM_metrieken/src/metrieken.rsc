@@ -58,9 +58,9 @@ public void printResults() {
 	int numHighUnitComplexity = 0;
 	// TODO: steven
 	int numVeryHighUnitComplexity = 0;
-	real ratioModerateUnitComplexity = 100 * numModerateUnitComplexity / numUnits;
-	real ratioHighUnitComplexity = 100 * numHighUnitComplexity / numUnits;
-	real ratioVeryHighUnitComplexity = 100 * numVeryHighUnitComplexity / numUnits;
+	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
+	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
+	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
 	
    	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a < projectPLOC/1000])[1];
    	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a < projectLLOC/1000])[1];
