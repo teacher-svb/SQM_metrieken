@@ -53,11 +53,11 @@ public void printResults() {
    	
    	println();
 	// TODO: steven
-	int numModerateUnitComplexity = 0;
+	int numModerateUnitComplexity = 1;
 	// TODO: steven
-	int numHighUnitComplexity = 0;
+	int numHighUnitComplexity = 1;
 	// TODO: steven
-	int numVeryHighUnitComplexity = 0;
+	int numVeryHighUnitComplexity = 1;
 	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
 	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
 	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
