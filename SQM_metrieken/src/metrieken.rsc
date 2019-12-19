@@ -14,6 +14,20 @@ import util::Resources;
 import metrieken_LOC;
 import metrieken_DUP;
 
+lrel[int, str] volumeScoreTable = [<0, "++">, <66, "+">, <246, "0">, <665, "-">, <1310, "--">];
+
+lrel[int, str] unitSizeScoreTable = [<0, "++">, <30, "+">, <44, "0">, <74, "-">, <0, "--">];
+
+lrel[int, str] duplicityScoreTable = [<0, "++">, <3, "+">, <5, "0">, <10, "-">, <20, "--">];
+
+
+// merged "simple" with "moderate" risk, as they are treated equally for complexity score
+lrel[int, str] unitComplexityScoreTable = [<0, "moderate">, <21, "high">, <50, "very high">];
+list[int] complexityScoreTableModerate = [0, 25, 30, 45, 50];
+list[int] complexityScoreTableHigh = [0, 5, 10, 15];
+list[int] complexityScoreTableVeryHigh = [0, 5];
+lrel[int moder, int high, int vhigh, str score] complexityScoreTable = [<0, 0, 0, "++">, <25, 0, 0, "+">, <30, 5, 0, "0">, <45, 10, 0, "-">, <50, 15, 5, "--">];
+
 public void printResults() {
 	loc project = |project://smallsql/|;
 	println(project);
@@ -24,13 +38,13 @@ public void printResults() {
 	int numUnits = size(methods);
 	real avgUnitPLOC = (0.0 | it + calcPLOC(m.src) | m <- methods) / numUnits;
 	real avgUnitLLOC = (0.0 | it + calcLLOC(m) | m <- methods) / numUnits;
+	// TODO: steven
 	int avgUnitComplexity = 0;
 	real projectDuplication = calcDuplicationRatio(project);
 	
 	println();
 	
-   	println("lines of code (PLOC): <projectPLOC>");
-   	println("lines of code (LLOC): <projectLLOC>");
+   	println("lines of code (PLOC|LLOC): <projectPLOC> | <projectLLOC>");
    	println("number of units: <numUnits>");
    	println("average unit size (PLOC): <avgUnitPLOC>");
    	println("average unit size (LLOC): <avgUnitLLOC>");
@@ -38,18 +52,33 @@ public void printResults() {
    	println("duplication: <projectDuplication>%");
    	
    	println();
-   	
-   	str volumeScore = "";
-   	str unitSizeScore = "";
-   	str complexityScore = "";
-   	str duplicationScore = "";
+	// TODO: steven
+	int numModerateUnitComplexity = 0;
+	// TODO: steven
+	int numHighUnitComplexity = 0;
+	// TODO: steven
+	int numVeryHighUnitComplexity = 0;
+	real ratioModerateUnitComplexity = 100 * numModerateUnitComplexity / numUnits;
+	real ratioHighUnitComplexity = 100 * numHighUnitComplexity / numUnits;
+	real ratioVeryHighUnitComplexity = 100 * numVeryHighUnitComplexity / numUnits;
+	
+   	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a < projectPLOC/1000])[1];
+   	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a < projectLLOC/1000])[1];
+   	str unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a < avgUnitPLOC])[1];
+   	str unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a < avgUnitLLOC])[1];
+   	str complexityScore = max([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
+   										   a < ratioModerateUnitComplexity || 
+   										   b < ratioHighUnitComplexity || 
+   										   c < ratioVeryHighUnitComplexity])[3];
+   	str duplicationScore = max([<a,b> | <a, b> <- duplicityScoreTable, a < projectDuplication])[1];
+
    	str analyseScore = "";
    	str changeScore = "";
    	str testScore = "";
    	str maintainScore = "";
    	
-   	println("volume score: <volumeScore>");
-	println("unit size score: <unitSizeScore>");
+   	println("volume score (PLOC|LLOC): <volumePLOCScore> | <volumePLOCScore>");
+	println("unit size score (PLOC|LLOC): <unitSizePLOCScore> | <unitSizeLLOCScore>");
 	println("unit complexity score: <complexityScore>");
 	println("duplication score: <duplicationScore>");
    	
