@@ -11,8 +11,14 @@ import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
 import util::Resources;
 
+import vis::Figure;
+import vis::Render;
+import vis::KeySym;
+
+
 import metrieken_LOC;
 import metrieken_DUP;
+import metrieken_CC;
 
 lrel[int, str] volumeScoreTable = [<0, "++">, <66, "+">, <246, "0">, <665, "-">, <1310, "--">];
 
@@ -52,15 +58,16 @@ public void printResults() {
    	println("duplication: <projectDuplication>%");
    	
    	println();
+   	<extreme,high,moderate>  = GetComplexity(project);
 	// TODO: steven
-	int numModerateUnitComplexity = 0;
+	real ratioModerateUnitComplexity =  extreme;
 	// TODO: steven
-	int numHighUnitComplexity = 0;
+	real ratioHighUnitComplexity =  high;
 	// TODO: steven
-	int numVeryHighUnitComplexity = 0;
-	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
-	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
-	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
+	real ratioVeryHighUnitComplexity = moderate;
+	//real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
+	//real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
+	//real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
 	println(ratioModerateUnitComplexity);
 	println(ratioHighUnitComplexity);
 	println(ratioVeryHighUnitComplexity);
@@ -98,9 +105,9 @@ public void printResults() {
 }
 
 public void showLLOCTreemaps() {
-	render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
+	//render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
 	
-	//render("treemap hsqldb", createLLOCTreeMap(|project://hsqldb/|));
+	render("treemap hsqldb", createLLOCTreeMap(|project://hsqldb/|));
 }
 
 public void printPLOC() {
