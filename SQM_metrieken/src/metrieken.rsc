@@ -36,7 +36,7 @@ list[int] complexityScoreTableVeryHigh = [0, 5];
 lrel[int moder, int high, int vhigh, str score] complexityScoreTable = [<25, 0, 0, "++">, <30, 5, 0, "+">, <45, 10, 0, "0">, <50, 15, 5, "-">, <100, 100, 100, "--">];
 
 public void printResults() {
-	loc project = |project://hsqldb/|;
+	loc project = |project://smallsql/|;
 	println(project);
 	
 	int projectPLOC = (0 | it + b | <a,b> <- calcPLOCForProjectFiles(project));
@@ -60,22 +60,18 @@ public void printResults() {
    	
    	println();
    	<extreme,high,moderate>  = GetComplexity(project);
-	// TODO: steven
 	real ratioModerateUnitComplexity =  extreme;
-	// TODO: steven
 	real ratioHighUnitComplexity =  high;
-	// TODO: steven
-	int numVeryHighUnitComplexity = 0;
-	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
-	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
-	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
 	real ratioVeryHighUnitComplexity = moderate;
+	//int numModerateUnitComplexity = 0;
+	//int numHighUnitComplexity = 0;
+	//int numVeryHighUnitComplexity = 0;
 	//real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
 	//real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
 	//real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
-	println(ratioModerateUnitComplexity);
-	println(ratioHighUnitComplexity);
-	println(ratioVeryHighUnitComplexity);
+	//println(ratioModerateUnitComplexity);
+	//println(ratioHighUnitComplexity);
+	//println(ratioVeryHighUnitComplexity);
 	
    	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectPLOC/1000])[1];
    	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
