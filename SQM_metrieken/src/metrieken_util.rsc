@@ -28,6 +28,24 @@ public void metrieken_test2() {
 	println(size(result));
 	
 }
+public void metrieken_testCC(){
+loc fileloc = |project://smallsql/src/smallsql/database/Test.java|;
+Declaration decls = createAstFromFile(fileloc,true);
+visit(decls){
+  case \if(impl, then): {
+      	 teststuff(impl);
+      	}
+}
+
+}
+public void teststuff(Expression impl){
+visit(impl){
+  case  \infix( _,  op,  _): {
+      	println(op);
+      	}
+}
+}
+
 
 public void metrieken_test3() {
 	str l = "{ STXADD_COMMENT_OPEN			  , \"Missing end comment mark (\'\'*/\'\').\" },";

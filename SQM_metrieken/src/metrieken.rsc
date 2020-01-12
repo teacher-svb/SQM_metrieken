@@ -38,6 +38,8 @@ public void printResults() {
 	loc project = |project://smallsql/|;
 	println(project);
 	
+	<extreme,high,moderate,avgComplexity>  = GetComplexity(project);
+	
 	int projectPLOC = (0 | it + b | <a,b> <- calcPLOCForProjectFiles(project));
 	int projectLLOC = (0 | it + b | <a,b> <- calcLLOCForProjectFiles(project));
 	list[Declaration] methods = getMethods(project);
@@ -45,7 +47,7 @@ public void printResults() {
 	real avgUnitPLOC = (0.0 | it + calcPLOC(m.src) | m <- methods) / numUnits;
 	real avgUnitLLOC = (0.0 | it + calcLLOC(m) | m <- methods) / numUnits;
 	// TODO: steven
-	int avgUnitComplexity = 0;
+	int avgUnitComplexity = avgComplexity;
 	real projectDuplication = calcDuplicationRatio(project);
 	
 	println();
@@ -58,7 +60,7 @@ public void printResults() {
    	println("duplication: <projectDuplication>%");
    	
    	println();
-   	<extreme,high,moderate>  = GetComplexity(project);
+   	
 	// TODO: steven
 	real ratioModerateUnitComplexity =  extreme;
 	// TODO: steven
@@ -122,6 +124,7 @@ public void printLLOC() {
 
    	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
 }
+
 
 public void metrieken_test2() {
 	//loc fileloc = |project://smallsql/src/smallsql/database/language/Language.java|;

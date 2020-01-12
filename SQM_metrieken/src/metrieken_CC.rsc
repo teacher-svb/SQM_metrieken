@@ -20,10 +20,12 @@ lrel[int, int] CyclComplexTable = [<11, 1>, <21, 2>, <51, 3>];
 public int CalcComplexity(Statement impl) {
 	int count = 1;
    	visit(impl) {  
-	 	case \if(_, thenBranch): {
+	 	case \if(condition, _): {
+	 		count+= CalcOR(condition);
 	 		count += 1;
 		}
-	 	case \if(_, thenBranch, elseBranch): {
+	 	case \if(condition, _, _): {
+	 		count+= CalcOR(condition);
 	 		count += 2;
 		}
 	 	case \while(_, body): {
@@ -48,61 +50,24 @@ public int CalcComplexity(Statement impl) {
 			count += 1;
 		}
 		case \defaultCase(): {
-			count += 1;
-		}
-   	}
-   	return count;
-}public int CalcComplexity2(set[Declaration] impl) {
-	int count = 1;
-   	visit(impl) {  
-	 	case \if(_, thenBranch): {
-	 		count += 1;
-		}
-	 	case \if(_, thenBranch, elseBranch): {
-	 		count += 2;
-		}
-	 	case \while(_, body): {
-	 		count += 1;
-		}
-	 	case \foreach(_, _, body): {
-	 		count += 1;
-		}
-	 	case \for(_, _, _, body): {
-	 		count += 1;
-		}
-	 	case \for(_, _, body): {
-	 		count += 1;
-		}
-	 	case \do(body, _): {
-	 		count += 1;
-		}
-		case \case(expr): {
-			count += 1;
-		}
-		case \defaultCase(): {
-			count += 1;
-		}
-		case \foreach(_,_,_):{
-			count += 1;
-		}
-		case \throw(_): {
-			count += 1;
-		}
-		case \try(_, _): {
-			count += 1;
-		}
-		case \try(_, _, _): {
-			count += 1;
-		}                                        
-		case \catch(_, _): {
 			count += 1;
 		}
    	}
    	return count;
 }
+public int CalcOR(Expression exp){
+int count =0;
+visit(exp){
+  case  \infix( _,  op,  _): {
+  	if(op=="||")
+      	count +=1;
+      	}
+}
+return count;
+}
 
 //public map[loc source, lrel[str methodname,int complexity] CC] printComplexity() {
-public tuple[real extreme, real high, real moderate] GetComplexity(loc project){
+public tuple[real extreme, real high, real moderate,real avgComplexity] GetComplexity(loc project){
    set[loc] files = javaBestanden(project);
    set[Declaration] decls = createAstsFromFiles(files, false); 
    
@@ -110,13 +75,16 @@ public tuple[real extreme, real high, real moderate] GetComplexity(loc project){
   real moderate=0.0;
   real high =0.0;
   real extreme=0.0;
+   real agrComp =0.0;
+   real unitCount=0.0;
    
    lrel[str method,loc src] source=[];
    lrel[str methodname,int complexity] CC =[];
    visit(decls) {  
       case \method(_, name, _, _, impl): {
       	int count=CalcComplexity(impl);
-         
+         agrComp+=count;
+         unitCount+=1;
          int totals = calcLOC(impl);
          if(count >50)
          	extreme+=totals;
@@ -131,7 +99,7 @@ public tuple[real extreme, real high, real moderate] GetComplexity(loc project){
       } 
    }
    //println("<extreme*100/total>,<high*100/total>,<moderate*100/total>,<total>");
-   return <extreme*100/total,high*100/total,moderate*100/total>;
+   return <extreme*100/total,high*100/total,moderate*100/total,agrComp/unitCount>;
 }
 
 public int calcLOC(Statement decl) {
