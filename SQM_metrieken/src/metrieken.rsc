@@ -11,8 +11,15 @@ import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
 import util::Resources;
 
+import vis::Figure;
+import vis::Render;
+import vis::KeySym;
+
+
 import metrieken_LOC;
 import metrieken_DUP;
+import metrieken_util;
+import metrieken_CC;
 
 lrel[int, str] volumeScoreTable = [<0, "++">, <66, "+">, <246, "0">, <665, "-">, <1310, "--">];
 
@@ -44,24 +51,27 @@ public void printResults() {
 	
 	println();
 	
-   	println("lines of code (PLOC|LLOC): <projectPLOC> | <projectLLOC>");
-   	println("number of units: <numUnits>");
-   	println("average unit size (PLOC): <avgUnitPLOC>");
-   	println("average unit size (LLOC): <avgUnitLLOC>");
-   	println("average unit complexity: <avgUnitComplexity>");
-   	println("duplication: <projectDuplication>%");
+   	println("lines of code (PLOC|LLOC):\t <projectPLOC> | <projectLLOC>");
+   	println("number of units:\t\t <numUnits>");
+   	println("average unit size (PLOC):\t <avgUnitPLOC>");
+   	println("average unit size (LLOC):\t <avgUnitLLOC>");
+   	println("average unit complexity:\t <avgUnitComplexity>");
+   	println("duplication:\t\t\t <projectDuplication>%");
    	
    	println();
-	// TODO: steven
-	int numModerateUnitComplexity = 0;
-	// TODO: steven
-	int numHighUnitComplexity = 0;
-	// TODO: steven
-	int numVeryHighUnitComplexity = 0;
-	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
-	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
-	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
-	println(avgUnitPLOC);
+   	<extreme,high,moderate>  = GetComplexity(project);
+	real ratioModerateUnitComplexity =  extreme;
+	real ratioHighUnitComplexity =  high;
+	real ratioVeryHighUnitComplexity = moderate;
+	//int numModerateUnitComplexity = 0;
+	//int numHighUnitComplexity = 0;
+	//int numVeryHighUnitComplexity = 0;
+	//real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
+	//real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
+	//real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
+	//println(ratioModerateUnitComplexity);
+	//println(ratioHighUnitComplexity);
+	//println(ratioVeryHighUnitComplexity);
 	
    	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectPLOC/1000])[1];
    	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
@@ -78,16 +88,16 @@ public void printResults() {
    	str testScore = "";
    	str maintainScore = "";
    	
-   	println("volume score (PLOC|LLOC): <volumePLOCScore> | <volumePLOCScore>");
-	println("unit size score (PLOC|LLOC): <unitSizePLOCScore> | <unitSizeLLOCScore>");
-	println("unit complexity score: <complexityScore>");
-	println("duplication score: <duplicationScore>");
+   	println("volume score (PLOC|LLOC):\t <volumePLOCScore> | <volumePLOCScore>");
+	println("unit size score (PLOC|LLOC):\t <unitSizePLOCScore> | <unitSizeLLOCScore>");
+	println("unit complexity score:\t\t <complexityScore>");
+	println("duplication score:\t\t <duplicationScore>");
    	
    	println();
 	
-	println("analysability score: <analyseScore>");
-	println("changability score: <changeScore>");
-	println("testability score: <testScore>");
+	println("analysability score:\t <analyseScore>");
+	println("changability score:\t <changeScore>");
+	println("testability score:\t <testScore>");
    	
    	println();
 	
@@ -95,9 +105,9 @@ public void printResults() {
 }
 
 public void showLLOCTreemaps() {
-	render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
+	//render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
 	
-	//render("treemap hsqldb", createLLOCTreeMap(|project://hsqldb/|));
+	render("treemap hsqldb", createLLOCTreeMap(|project://hsqldb/|));
 }
 
 public void printPLOC() {

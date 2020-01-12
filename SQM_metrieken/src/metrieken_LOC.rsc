@@ -11,6 +11,7 @@ import util::Editors;
 import util::Math;
 
 import vis::Figure;
+import vis::Figure::ColorModel;
 import vis::Render;
 import vis::KeySym;
 
@@ -63,27 +64,39 @@ public Figure createLLOCTreeMap(loc project) {
 		
 		// generate an arbitrary color that will be used for both the file box and method subtree
 		Color c = arbColor();
-		lrel[loc, int] methodLLOCs = calcLLOCForMethods({l1});
+		lrel[loc, tuple[int,int]] methodLLOCs = calcCCForMethods({l1});
 		list[Figure] subfigures = [];
 		
 		int subtreeArea = 0;
-		for (<l2, s2> <- methodLLOCs) {
+		for (<l2, <s2,s2cc>> <- methodLLOCs) {
 			subtreeArea += s2;
 			// make a local copy of l2 and s2, to use in the popup (otherwise it will use the scoped var l2, and refer to the last value of l1)
 			loc l2copy = l2;
 			int s2copy = s2;
+			int s2ccCopy = s2cc;
+			Color col;
 			
+			
+			if(s2cc<=10)
+				col = interpolateColor(color("lightgreen"), color("green"),(s2cc/10.0));
+			else if(s2cc<=20)
+				col = interpolateColor(color("green"), color("yellow"),((s2cc-10)/10.0));
+			else if(s2cc<=50)
+				col = interpolateColor(color("yellow"), color("red"),((s2cc-20)/30.0));
+			else if(s2cc<=100)
+				col = interpolateColor(color("red"), color("black"),((s2cc-50)/50.0));
+				else col= color("black");
 			
 			// add a box to the subtree for every method. 
 			subfigures += box(area(s2),
-							  fillColor(interpolateColor(color("green"), color("red"), arbReal())), 
+							  fillColor(col), 
 							  // clicking the box opens the file and selects the method
 							  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
 									edit(l2copy);
 									return true;
 							  }),
 							  // hovering over the box shows the LLOC count of that method
-						      mouseOver(box(text("<s2copy>"), 
+						      mouseOver(box(text("LLOC:<s2copy> Comlexity:<s2ccCopy>"), 
 						   			 		fillColor("lightyellow"),
 						   			 		grow(1.2),
 						   			 		resizable(false)
@@ -92,7 +105,7 @@ public Figure createLLOCTreeMap(loc project) {
 						);
 		}
 		// add a box to the subtree that shows how many LLOCs are NOT in a method
-		subfigures += box(area(s1 - subtreeArea),fillColor(interpolateColor(color("white"), color("green"), 0.5)), 
+		subfigures += box(area(s1 - subtreeArea),fillColor(color("blue")), 
 						  // clicking the box opens the file
 						  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
 								edit(l1copy);
@@ -160,17 +173,41 @@ public list[Declaration] getMethods(loc file) {
 	function calcLLOCForMethods
 	calculates the amount of Logical Lines Of Code for each method in a set of locations.
 */
+public lrel[loc, tuple[int LLOC,int CC]] calcCCForMethods(set[loc] files) {
+	lrel[loc, tuple[int,int]] methodLLOCs = [];
+	
+	for (a <- files) { 
+		Declaration decl = createAstFromFile(a, false);
+		
+		visit(decl) {
+			case \class(_, _, _, list[Declaration] body): {
+				for (b <- body) {
+					switch(b) {
+						case \method(_, _, _, _, _): {
+							methodLLOCs += <b.src, calcCC(b)>;
+						}
+						case \constructor(_, _, _, _): {
+							methodLLOCs += <b.src, calcCC(b)>;
+						}
+					}
+				}
+			}
+		}
+	}
+	return methodLLOCs;
+}
 public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 	lrel[loc, int] methodLLOCs = [];
 	
 	for (a <- files) { 
-		list[Declaration] methods = getMethods(a);
+		/*list[Declaration] methods = getMethods(a);
 		
 		for (m <- methods) {
-			methodLLOCs += <m.src, calcLLOC(m)>;
-		}
 		
-		/*Declaration decl = createAstFromFile(a, false);
+			methodLLOCs += <m.src,calcLLOC(m)>;
+		}*/
+		
+		Declaration decl = createAstFromFile(a, false);
 		
 		visit(decl) {
 			case \class(_, _, _, list[Declaration] body): {
@@ -185,7 +222,7 @@ public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 					}
 				}
 			}
-		}*/
+		}
 	}
 	return methodLLOCs;
 }
@@ -272,7 +309,7 @@ public int calcLLOC(Declaration decl) {
   		case \constructorCall(_, _): {
      		count+=1;
   		} 
-		case \method(_, _, _, _): {
+		case \method(_, _, _, _,_): {
 			count += 1;
 		}
 		case \field(_, _): {
@@ -312,4 +349,110 @@ public int calcLLOC(Declaration decl) {
 		}
 	}
 	return count;
+}
+public tuple[int,int] calcCC(Declaration decl) {
+	int count = 0;
+	int ccCount=0;
+	visit(decl) {  
+		case \declarationStatement(_): {
+         	count+=1;
+      	} 
+  		case \expressionStatement(_): {
+     		count+=1;
+  		} 
+  		case \return(_): {
+     		count+=1;
+  		} 
+  		case \return(): {
+     		count+=1;
+  		} 
+  		case \break(_): {
+     		count+=1;
+  		} 
+  		case \break(): {
+     		count+=1;
+  		} 
+  		case \continue(_): {
+     		count+=1;
+  		} 
+  		case \continue(): {
+     		count+=1;
+  		} 
+  		case \constructorCall(_, _, _): {
+     		count+=1;
+  		} 
+  		case \constructorCall(_, _): {
+     		count+=1;
+  		} 
+		case \method(_, _, _, _,_): {
+			count += 1;
+		}
+		case \field(_, _): {
+			count += 1;
+		}
+		case \initializer(_): {
+			count += 1;
+		}
+		
+		case \block(_): {
+			count += 1;
+		}
+
+		case \switch(_, _): {
+			count += 1;
+		}
+		case \class(_): {
+			count += 1;
+		}
+		case \class(_, _, _, _): {
+			count += 1;
+		}
+		case \interface(_, _, _, _): {
+			count += 1;
+		}
+		case \throw(_): {
+			count += 1;
+		}
+		case \try(_, _): {
+			count += 1;
+		}
+		case \try(_, _, _): {
+			count += 1;
+		}                                        
+		case \catch(_, _): {
+			count += 1;
+		}
+		
+		case \if(_, thenBranch): {
+	 		ccCount += 1;
+		}
+	 	case \if(_, thenBranch, elseBranch): {
+	 		ccCount += 2;
+		}
+	 	case \while(_, body): {
+	 		ccCount += 1;
+		}
+	 	case \foreach(_, _, body): {
+	 		ccCount += 1;
+		}
+	 	case \for(_, _, _, body): {
+	 		ccCount += 1;
+		}
+	 	case \for(_, _, body): {
+	 		ccCount += 1;
+		}
+		case \foreach(_,_,_):{
+			ccCount += 1;
+		}
+	 	case \do(body, _): {
+	 		ccCount += 1;
+		}
+		case \case(expr): {
+			ccCount += 1;
+		}
+		case \defaultCase(): {
+			ccCount += 1;
+		}
+	}
+	return <count,ccCount>;
 }
