@@ -16,9 +16,9 @@ import metrieken_DUP;
 
 lrel[int, str] volumeScoreTable = [<0, "++">, <66, "+">, <246, "0">, <665, "-">, <1310, "--">];
 
-lrel[int, str] unitSizeScoreTable = [<0, "++">, <30, "+">, <44, "0">, <74, "-">, <0, "--">];
+lrel[int, str] unitSizeScoreTable = [<0, "++">, <30, "+">, <44, "0">, <74, "-">];
 
-lrel[int, str] duplicityScoreTable = [<0, "++">, <3, "+">, <5, "0">, <10, "-">, <20, "--">];
+lrel[int, str] duplicityScoreTable = [<3, "++">, <5, "+">, <10, "0">, <20, "-">, <100, "--">];
 
 
 // merged "simple" with "moderate" risk, as they are treated equally for complexity score
@@ -61,20 +61,17 @@ public void printResults() {
 	real ratioModerateUnitComplexity = 100.0 * numModerateUnitComplexity / numUnits;
 	real ratioHighUnitComplexity = 100.0 * numHighUnitComplexity / numUnits;
 	real ratioVeryHighUnitComplexity = 100.0 * numVeryHighUnitComplexity / numUnits;
-	println(ratioModerateUnitComplexity);
-	println(ratioHighUnitComplexity);
-	println(ratioVeryHighUnitComplexity);
+	println(avgUnitPLOC);
 	
    	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectPLOC/1000])[1];
    	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
    	str unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitPLOC])[1];
    	str unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitLLOC])[1];
-   	//min([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, (c >= 6 && b >= 0 && a >= 45)]);[3];
    	str complexityScore = min([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
    										   a >= ratioModerateUnitComplexity && 
    										   b >= ratioHighUnitComplexity && 
    										   c >= ratioVeryHighUnitComplexity])[3];
-   	str duplicationScore = max([<a,b> | <a, b> <- duplicityScoreTable, a <= projectDuplication])[1];
+   	str duplicationScore = min([<a,b> | <a, b> <- duplicityScoreTable, a >= projectDuplication])[1];
 
    	str analyseScore = "";
    	str changeScore = "";
