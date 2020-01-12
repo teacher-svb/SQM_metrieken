@@ -53,8 +53,7 @@ public void printResults() {
 	
    	println("lines of code (PLOC|LLOC):\t <projectPLOC> | <projectLLOC>");
    	println("number of units:\t\t <numUnits>");
-   	println("average unit size (PLOC):\t <avgUnitPLOC>");
-   	println("average unit size (LLOC):\t <avgUnitLLOC>");
+   	println("average unit size (PLOC|LLOC):\t <avgUnitPLOC> | <avgUnitLLOC>");
    	println("average unit complexity:\t <avgUnitComplexity>");
    	println("duplication:\t\t\t <projectDuplication>%");
    	
