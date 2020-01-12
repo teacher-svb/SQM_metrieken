@@ -10,6 +10,7 @@ import String;
 import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
 import util::Resources;
+import util::Math;
 
 import vis::Figure;
 import vis::Render;
@@ -20,11 +21,11 @@ import metrieken_LOC;
 import metrieken_DUP;
 import metrieken_CC;
 
-lrel[int, str] volumeScoreTable = [<0, "++">, <66, "+">, <246, "0">, <665, "-">, <1310, "--">];
+lrel[int, int] volumeScoreTable = [<0, 2>, <66, 1>, <246, 0>, <665, -1>, <1310, -2>];
 
-lrel[int, str] unitSizeScoreTable = [<0, "++">, <30, "+">, <44, "0">, <74, "-">];
+lrel[int, int] unitSizeScoreTable = [<0, 2>, <30, 1>, <44, 0>, <74, -1>];
 
-lrel[int, str] duplicityScoreTable = [<3, "++">, <5, "+">, <10, "0">, <20, "-">, <100, "--">];
+lrel[int, int] duplicityScoreTable = [<3, 2>, <5, 1>, <10, 0>, <20, -1>, <100, -2>];
 
 
 // merged "simple" with "moderate" risk, as they are treated equally for complexity score
@@ -32,7 +33,9 @@ lrel[int, str] unitComplexityScoreTable = [<0, "moderate">, <21, "high">, <50, "
 list[int] complexityScoreTableModerate = [0, 25, 30, 45, 50];
 list[int] complexityScoreTableHigh = [0, 5, 10, 15];
 list[int] complexityScoreTableVeryHigh = [0, 5];
-lrel[int moder, int high, int vhigh, str score] complexityScoreTable = [<25, 0, 0, "++">, <30, 5, 0, "+">, <45, 10, 0, "0">, <50, 15, 5, "-">, <100, 100, 100, "--">];
+lrel[int moder, int high, int vhigh, int score] complexityScoreTable = [<25, 0, 0, 2>, <30, 5, 0, 1>, <45, 10, 0, 0>, <50, 15, 5, -1>, <100, 100, 100, -2>];
+
+map[int score, str scorename] scoreTranslation = (2: "++", 1: "+", 0: "0",-1: "-", -2: "--");
 
 public void printResults() {
 	loc project = |project://smallsql/|;
@@ -66,41 +69,43 @@ public void printResults() {
 	real ratioVeryHighUnitComplexity = moderate;
 
 	
-   	str volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectPLOC/1000])[1];
-   	str volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
-   	str unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitPLOC])[1];
-   	str unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitLLOC])[1];
-   	str complexityScore = min([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
+   	int volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectPLOC/1000])[1];
+   	int volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
+   	int unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitPLOC])[1];
+   	int unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitLLOC])[1];
+   	int complexityScore = min([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
    										   a >= ratioModerateUnitComplexity && 
    										   b >= ratioHighUnitComplexity && 
    										   c >= ratioVeryHighUnitComplexity])[3];
-   	str duplicationScore = min([<a,b> | <a, b> <- duplicityScoreTable, a >= projectDuplication])[1];
+   	int duplicationScore = min([<a,b> | <a, b> <- duplicityScoreTable, a >= projectDuplication])[1];
 
-   	str analyseScore = "";
-   	str changeScore = "";
-   	str testScore = "";
-   	str maintainScore = "";
+   	int analyseScore = toInt((volumeLLOCScore + duplicationScore + unitSizeLLOCScore) / 3.0); // volume + duplication + avg unit size
+   	int changeScore = toInt((complexityScore + duplicationScore) / 2.0); // complexity + duplication
+   	int testScore = toInt((complexityScore + unitSizeLLOCScore) / 3.0); // complexity + avg unit size
+   	int maintainScore = toInt((analyseScore + changeScore + testScore) / 3.0); // analyse + change + test
    	
-   	println("volume score (PLOC|LLOC): <volumePLOCScore> | <volumePLOCScore>");
-	println("unit size score (PLOC|LLOC): <unitSizePLOCScore> | <unitSizeLLOCScore>");
-	println("unit complexity score: <complexityScore>");
-	println("duplication score: <duplicationScore>");
-   	
-   	println();
-	
-	println("analysability score: <analyseScore>");
-	println("changability score: <changeScore>");
-	println("testability score: <testScore>");
+   	println("volume score (PLOC|LLOC): <scoreTranslation[volumePLOCScore]> | <scoreTranslation[volumePLOCScore]>");
+	println("unit size score (PLOC|LLOC): <scoreTranslation[unitSizePLOCScore]> | <scoreTranslation[unitSizeLLOCScore]>");
+	println("unit complexity score: <scoreTranslation[complexityScore]>");
+	println("duplication score: <scoreTranslation[duplicationScore]>");
    	
    	println();
 	
-	println("overall maintainability score: <maintainScore>");
+	println("analysability score: <scoreTranslation[analyseScore]>");
+	println("changability score: <scoreTranslation[changeScore]>");
+	println("testability score: <scoreTranslation[testScore]>");
+   	
+   	println();
+	
+	println("overall maintainability score: <scoreTranslation[maintainScore]>");
 }
 
 public void showLLOCTreemaps() {
 	//render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
 	
-	render("treemap hsqldb", createLLOCTreeMap(|project://smallsql/|));
+	b1 = box(hshrink(0.5), fillColor("Red"));
+	render(hcat([b1, createLLOCTreeMap(|project://smallsql/|)]));
+	//render("treemap hsqldb", createLLOCTreeMap(|project://smallsql/|));
 }
 
 public void printPLOC() {
