@@ -32,11 +32,13 @@ public real calcDuplicationRatio(loc project) {
 	return ratio;
 }
 
-public Figure showGraph(Graph[str] g) {
-   nodes = [ box(text(s), id(s), size(30), fillColor("yellow"))
-           | s <- carrier(g) 
+public Figure showGraph(lrel[loc, loc] listrelation) {
+	Graph[loc] g = {<a,b> | <a,b> <- listrelation};
+
+   nodes = [ box(text(s.file), size(40), id(s.uri), lineWidth(size(g[s]) + size(invert(g)[s])), fillColor("yellow"))
+           | s <- carrier(g)
            ];
-   edges = [ edge(a, b, toArrow(ellipse(size(10))))
+   edges = [ edge(a.uri, b.uri, lineWidth((0 | it + 1 | c <- listrelation, (c[0] == a && c[1] == b) || (c[0] == b && c[1] == a) )))
            | <a, b> <- g
            ];
    return graph(nodes, edges, hint("layered"), gap(40));
@@ -44,59 +46,18 @@ public Figure showGraph(Graph[str] g) {
 
 public void createDuplicationGraph(loc project) {
 	
-	/*lrel[loc location, str blocks] filesWithLinesPer6 = getBlocksOf6Lines(project);
-	println("blocks calculated");*/
-	
 	map[str block, list[loc] locs] linesPer6WithFiles = getBlocksOf6LinesWithFiles(project);
 	println("blocks calculated");
 	
-	/*
-	// count how many times each location exists in linesPer6
-	map[loc, int] locDistr = distribution(filesWithLinesPer6.location);
-	print("*");
-	// count how many times each block exists in linesPer6
-	map[str, int] blockDistr = distribution(filesWithLinesPer6.blocks);
-	print("*");
-	*/
-	
-	Graph[str] graph = {};
-	
-	/*list[list[loc]] groupedFiles = groupDomainByRange(filesWithLinesPer6);
-	println("files grouped");*/
+	lrel[loc, loc] graph = [];
 	
 	for (files <- linesPer6WithFiles.locs) {
-		graph += {<a.file,b.file> | <a, b> <- files join files, a != b};
+		graph += [<a,b> | <a, b> <- files join files, a != b];
 	}
 	print("graph assembled");
 	
 	
-	
-	/*lrel[str blocks, list[loc location] locations] linesPer6WithFiles = [];
-	
-	for (block <- filesWithLinesPer6) {
-		list[loc] files = [];
-		files += [ a | <a,b> <- filesWithLinesPer6, b == block[1]];
-		linesPer6WithFiles += <block[1], files>;
-	}
-	println("files grouped per block");
-	
-	for (block <- linesPer6WithFiles) {
-		graph += {<a.uri.file,b.uri.file> | <a, b> <- block[1] join block[1], a != b};
-	}
-	print("graph assembled");*/
-	
 	render(showGraph(graph));
-	
-	
-	/*lrel[loc location, str block, int locSize, int blockDupes] dupScoresPerFile = [];
-	
-	for (locSize <- locDistr) {
-		list[str] blocks = [b | <a, b> <- linesPer6, a == locSize[0]];
-		
-		for (block <- blocks) {
-			dupScoresPerFile += <locSize[0], block, locSize[1], blockDistr[block]>;
-		}
-	}*/
 }
 
 public lrel[loc, str] getBlocksOf6Lines(loc project) {
