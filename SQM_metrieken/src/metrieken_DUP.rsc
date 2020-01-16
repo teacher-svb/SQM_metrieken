@@ -35,13 +35,13 @@ public real calcDuplicationRatio(loc project) {
 public Figure showGraph(lrel[loc, loc] listrelation) {
 	Graph[loc] g = {<a,b> | <a,b> <- listrelation};
 
-   nodes = [ box(text(s.file), size(40), id(s.uri), lineWidth(size(g[s]) + size(invert(g)[s])), fillColor("yellow"))
+   nodes = [ ellipse(text(s.file), size(80), id(s.uri), lineWidth(size(g[s]) + size(invert(g)[s])), fillColor("yellow"))
            | s <- carrier(g)
            ];
    edges = [ edge(a.uri, b.uri, lineWidth((0 | it + 1 | c <- listrelation, (c[0] == a && c[1] == b) || (c[0] == b && c[1] == a) )))
            | <a, b> <- g
            ];
-   return graph(nodes, edges, hint("layered"), gap(40));
+   return graph(nodes, edges, hint("layered"), std(size(30)), gap(40), resizable(true));
 }
 
 public void createDuplicationGraph(loc project) {
@@ -56,9 +56,33 @@ public void createDuplicationGraph(loc project) {
 	}
 	print("graph assembled");
 	
-	
-	render(showGraph(graph));
+	Figure graphFigure = showGraph(graph);
+	render(graphFigure);
+	renderSave(graphFigure, |project://smallsql/test.png|);
 }
+
+/*
+public Figure testFigure() 
+{
+	real shrinkParam = 1.0;
+	Figure b = computeFigure(
+					Figure () { 
+						return box(	resizable(true), 
+								   	size(300, 300),
+									shrink(shrinkParam),
+									fillColor("green"),
+									onMouseEnter(void () { 
+										shrinkParam = 0.5;
+									}),
+									onMouseExit(void () { 
+										shrinkParam = 1.0;
+									})
+						);
+					} 
+				);
+	return b;
+}*/
+
 
 public lrel[loc, str] getBlocksOf6Lines(loc project) {
 	set[loc] files = javaBestanden(project);
