@@ -110,7 +110,7 @@ public void showLLOCTreemaps() {
 	
 	Figure LocTreemap = createLLOCTreeMap(|project://smallsql/|);
 	render("LOC Treemap",LocTreemap);
-	renderSave(LocTreemap, |file:///C:/Users/somsg/Documents/GitHub/SQM_metrieken/SQM_metrieken/LocTreemap.png|);
+	renderSave(LocTreemap, 2048, 2048, |file:///C:/Users/somsg/Documents/GitHub/SQM_metrieken/SQM_metrieken/LocTreemap.png|);
 }
 
 public void printPLOC() {
