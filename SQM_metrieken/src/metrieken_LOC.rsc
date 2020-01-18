@@ -53,7 +53,21 @@ public lrel[loc, int] calcPLOCForProjectFiles(loc project) {
 	creates a treemap based on the LLOC value per file(main tree)/per method (subtree)
 	
 */
+public Figure createBaseTreeMap(loc project)
+{
+lrel[loc, int] LLOCs = calcLLOCForProjectFiles(project);
+	
+	list[Figure] figures = [];
+	for(<l,c> <-LLOCs){
+	b0 = box(area(c), fillColor("white"));
+	bC = box(b0,hshrink(0.5),vshrink(0.9),align(0,0));
+	bD = box(b0,hshrink(0.5),vshrink(0.9),align(0,1));
+	
+	}
+}
 public Figure createLLOCTreeMap(loc project) { 
+a =box(fillColor(color("yellow")));
+b= box(fillColor(color("green")));
 	lrel[loc, int] LLOCs = calcLLOCForProjectFiles(project);
 	
 	list[Figure] figures = [];
@@ -83,9 +97,7 @@ public Figure createLLOCTreeMap(loc project) {
 				col = interpolateColor(color("green"), color("yellow"),((s2cc-10)/10.0));
 			else if(s2cc<=50)
 				col = interpolateColor(color("yellow"), color("red"),((s2cc-20)/30.0));
-			else if(s2cc<=100)
-				col = interpolateColor(color("red"), color("black"),((s2cc-50)/50.0));
-				else col= color("black");
+				else col= color("red");
 			
 			// add a box to the subtree for every method. 
 			subfigures += box(area(s2),
@@ -106,9 +118,13 @@ public Figure createLLOCTreeMap(loc project) {
 		}
 		// add a box to the subtree that shows how many LLOCs are NOT in a method
 		subfigures += box(area(s1 - subtreeArea),fillColor(color("blue")), 
-						  // clicking the box opens the file
+						  // clicking the box renders a previously saved image
 						  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
-								edit(l1copy);
+						  if(butnr==1)
+								render(a);
+						  if(butnr==3)
+								render(b);
+								//edit(l1copy);
 								return true;
 						  }),
 						  // hovering over the box shows the LLOC count of lines outside methods
@@ -350,6 +366,16 @@ public int calcLLOC(Declaration decl) {
 	}
 	return count;
 }
+public int CalcOR(Expression exp){
+int count =0;
+visit(exp){
+  case  \infix( _,  op,  _): {
+  	if(op=="||")
+      	count +=1;
+      	}
+}
+return count;
+}
 public tuple[int,int] calcCC(Declaration decl) {
 	int count = 0;
 	int ccCount=0;
@@ -422,12 +448,13 @@ public tuple[int,int] calcCC(Declaration decl) {
 		case \catch(_, _): {
 			count += 1;
 		}
-		
-		case \if(_, thenBranch): {
-	 		ccCount += 1;
+	 	case \if(condition, _): {
+	 		count+= CalcOR(condition);
+	 		count += 1;
 		}
-	 	case \if(_, thenBranch, elseBranch): {
-	 		ccCount += 2;
+	 	case \if(condition, _, _): {
+	 		count+= CalcOR(condition);
+	 		count += 2;
 		}
 	 	case \while(_, body): {
 	 		ccCount += 1;

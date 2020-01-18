@@ -103,8 +103,9 @@ public void printResults() {
 public void showLLOCTreemaps() {
 	//render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
 	
-	b1 = box(hshrink(0.5), fillColor("Red"));
-	render(hcat([b1, createLLOCTreeMap(|project://smallsql/|)]));
+	Figure LocTreemap = createLLOCTreeMap(|project://smallsql/|);
+	render("LOC Treemap",LocTreemap);
+	renderSave(f, |project://smallsql/treemap.png|);
 	//render("treemap hsqldb", createLLOCTreeMap(|project://smallsql/|));
 }
 
