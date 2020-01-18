@@ -45,7 +45,12 @@ public Figure showGraph(lrel[loc, loc] listrelation, lrel[loc, loc] listrelation
    return graph(nodes, edges, hint("layered"), std(size(30)), gap(40));
 }
 
-public void createDuplicationGraph(loc project) {
+public void renderDuplicationGraph(loc project){
+	Figure f = createDuplicationGraph(project);
+	render(f);
+	renderSave(f, |project://smallsql/graph.png|);
+}
+public Figure createDuplicationGraph(loc project) {
 	
 	map[str block, list[loc] locs] linesPer6WithFiles = getBlocksOf6LinesWithFiles(project);
 	println("blocks calculated");
@@ -80,9 +85,7 @@ public void createDuplicationGraph(loc project) {
 		}
 	}
 	
-	Figure f = grid(figuresList);
-	render(f);
-	renderSave(f, |project://smallsql/test.png|);
+	return grid(figuresList);;
 	
 	/*Figure graphFigure = showGraph(graph);
 	render(graphFigure);
