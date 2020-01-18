@@ -10,6 +10,7 @@ import String;
 import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
 import util::Resources;
+import util::Math;
 import vis::Figure;
 import vis::Render;
 import analysis::graphs::Graph;
@@ -32,16 +33,16 @@ public real calcDuplicationRatio(loc project) {
 	return ratio;
 }
 
-public Figure showGraph(lrel[loc, loc] listrelation) {
+public Figure showGraph(lrel[loc, loc] listrelation, lrel[loc, loc] listrelation2) {
 	Graph[loc] g = {<a,b> | <a,b> <- listrelation};
 
    nodes = [ ellipse(text(s.file), size(80), id(s.uri), lineWidth(size(g[s]) + size(invert(g)[s])), fillColor("yellow"))
            | s <- carrier(g)
            ];
-   edges = [ edge(a.uri, b.uri, lineWidth((0 | it + 1 | c <- listrelation, (c[0] == a && c[1] == b) || (c[0] == b && c[1] == a) )))
+   edges = [ edge(a.uri, b.uri, lineWidth((0 | it + 1 | c <- listrelation2, (c[0] == a && c[1] == b) || (c[0] == b && c[1] == a) )))
            | <a, b> <- g
            ];
-   return graph(nodes, edges, hint("layered"), std(size(30)), gap(40), resizable(true));
+   return graph(nodes, edges, hint("layered"), std(size(30)), gap(40));
 }
 
 public void createDuplicationGraph(loc project) {
@@ -54,11 +55,38 @@ public void createDuplicationGraph(loc project) {
 	for (files <- linesPer6WithFiles.locs) {
 		graph += [<a,b> | <a, b> <- files join files, a != b];
 	}
-	print("graph assembled");
+	println("graph assembled");
 	
-	Figure graphFigure = showGraph(graph);
+	Graph[loc] g = {<a,b> | <a,b> <- graph};
+	set[set[loc]] components = connectedComponents(g);
+	components = { a | a <- components, size(a) > 2};
+	println("graph deconstructed to components");
+	
+	int numComps = size(components);
+	int colSize = ceil(sqrt(numComps));
+	
+	list[Figures] figuresList = [];
+	Figures figures = [];
+	
+	int counter = 0;
+	for (files <- components) {
+		counter += 1;
+		lrel[loc, loc] graph2 = [<a,b> | <a, b> <- files join files, a != b];
+		figures += showGraph(graph2, graph);
+		
+		if (counter % colSize == 0) {
+			figuresList += [figures];
+			figures = [];
+		}
+	}
+	
+	Figure f = grid(figuresList);
+	render(f);
+	renderSave(f, |project://smallsql/test.png|);
+	
+	/*Figure graphFigure = showGraph(graph);
 	render(graphFigure);
-	renderSave(graphFigure, |project://smallsql/test.png|);
+	renderSave(graphFigure, |project://smallsql/test.png|);*/
 }
 
 /*
