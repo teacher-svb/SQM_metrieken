@@ -449,12 +449,12 @@ public tuple[int,int] calcCC(Declaration decl) {
 			count += 1;
 		}
 	 	case \if(condition, _): {
-	 		count+= CalcOR(condition);
-	 		count += 1;
+	 		ccCount+= CalcOR(condition);
+	 		ccCount += 1;
 		}
 	 	case \if(condition, _, _): {
-	 		count+= CalcOR(condition);
-	 		count += 2;
+	 		ccCount+= CalcOR(condition);
+	 		ccCount += 2;
 		}
 	 	case \while(_, body): {
 	 		ccCount += 1;
