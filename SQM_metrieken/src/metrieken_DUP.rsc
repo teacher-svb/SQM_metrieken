@@ -45,11 +45,6 @@ public Figure showGraph(lrel[loc, loc] listrelation, lrel[loc, loc] listrelation
    return graph(nodes, edges, hint("layered"), std(size(30)), gap(40));
 }
 
-public void renderDuplicationGraph(loc project){
-	Figure f = createDuplicationGraph(project);
-	render(f);
-	renderSave(f, |project://smallsql/graph.png|);
-}
 public Figure createDuplicationGraph(loc project) {
 	
 	map[str block, list[loc] locs] linesPer6WithFiles = getBlocksOf6LinesWithFiles(project);
@@ -85,34 +80,9 @@ public Figure createDuplicationGraph(loc project) {
 		}
 	}
 	
-	return grid(figuresList);;
-	
-	/*Figure graphFigure = showGraph(graph);
-	render(graphFigure);
-	renderSave(graphFigure, |project://smallsql/test.png|);*/
+	Figure f = grid(figuresList);
+	return f;
 }
-
-/*
-public Figure testFigure() 
-{
-	real shrinkParam = 1.0;
-	Figure b = computeFigure(
-					Figure () { 
-						return box(	resizable(true), 
-								   	size(300, 300),
-									shrink(shrinkParam),
-									fillColor("green"),
-									onMouseEnter(void () { 
-										shrinkParam = 0.5;
-									}),
-									onMouseExit(void () { 
-										shrinkParam = 1.0;
-									})
-						);
-					} 
-				);
-	return b;
-}*/
 
 
 public lrel[loc, str] getBlocksOf6Lines(loc project) {

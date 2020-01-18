@@ -100,50 +100,24 @@ public void printResults() {
 	println("overall maintainability score: <scoreTranslation[maintainScore]>");
 }
 
+public void showDuplicationGraph() {
+	Figure duplicationGraph = createDuplicationGraph(|project://smallsql/|);
+	render("Duplication Graph", duplicationGraph);
+	renderSave(duplicationGraph, |file:///C:/Users/somsg/Documents/GitHub/SQM_metrieken/SQM_metrieken/dupgraph.png|);
+}
+
 public void showLLOCTreemaps() {
-	//render("treemap smallsql", createLLOCTreeMap(|project://smallsql/|));
 	
 	Figure LocTreemap = createLLOCTreeMap(|project://smallsql/|);
 	render("LOC Treemap",LocTreemap);
-	renderSave(f, |project://smallsql/treemap.png|);
-	//render("treemap hsqldb", createLLOCTreeMap(|project://smallsql/|));
+	renderSave(LocTreemap, |file:///C:/Users/somsg/Documents/GitHub/SQM_metrieken/SQM_metrieken/LocTreemap.png|);
 }
 
 public void printPLOC() {
 	lrel[loc, int] PLOC = calcPLOCForProjectFiles(|project://smallsql/|);
    	println("smallsql: <(0 | it + b | <a,b> <- PLOC)>");
-
-   	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
 }
 
 public void printLLOC() {
    	println("smallsql: <(0 | it + b | <a,b> <- calcLLOCForProjectFiles(|project://smallsql/|))>");
-
-   	//println("hsqldb: <(0 | it + b | <a,b> <- calcPLOCForProjectFiles(|project://hsqldb/|))>");
-}
-
-
-public void metrieken_test2() {
-	//loc fileloc = |project://smallsql/src/smallsql/database/language/Language.java|;
-	loc fileloc = |project://smallsql/src/smallsql/junit/TestTokenizer.java|;
-	list[str] lines = readFileLines(fileloc);
-	list[str] result = [];
-	
-	for (l <- lines) {
-		l = filterLine(l);
-		if (l != "") {
-			println(l);
-			result += l;
-		}
-	}
-	println(fileloc);
-	println(size(result));
-	
-}
-
-public void metrieken_test3() {
-	str l = "{ STXADD_COMMENT_OPEN			  , \"Missing end comment mark (\'\'*/\'\').\" },";
-	l = filterLine(l);
-	println("filtered:");
-	println(l);
 }
