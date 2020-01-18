@@ -53,18 +53,7 @@ public lrel[loc, int] calcPLOCForProjectFiles(loc project) {
 	creates a treemap based on the LLOC value per file(main tree)/per method (subtree)
 	
 */
-public Figure createBaseTreeMap(loc project)
-{
-lrel[loc, int] LLOCs = calcLLOCForProjectFiles(project);
-	
-	list[Figure] figures = [];
-	for(<l,c> <-LLOCs){
-	b0 = box(area(c), fillColor("white"));
-	bC = box(b0,hshrink(0.5),vshrink(0.9),align(0,0));
-	bD = box(b0,hshrink(0.5),vshrink(0.9),align(0,1));
-	
-	}
-}
+
 public Figure createLLOCTreeMap(loc project) { 
 a =box(fillColor(color("yellow")));
 b= box(fillColor(color("green")));
@@ -120,11 +109,8 @@ b= box(fillColor(color("green")));
 		subfigures += box(area(s1 - subtreeArea),fillColor(color("blue")), 
 						  // clicking the box renders a previously saved image
 						  onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
-						  if(butnr==1)
-								render(a);
-						  if(butnr==3)
-								render(b);
-								//edit(l1copy);
+						 
+								edit(l1copy);
 								return true;
 						  }),
 						  // hovering over the box shows the LLOC count of lines outside methods

@@ -18,6 +18,7 @@ import metrieken_DUP;
 import metrieken_LOC;
 
 public void renderBaseMenu(){
+renderSave(createLLOCTreeMap(|project://smallsql/|),|project://smallsql/treemap.png|);
 	render(createBaseMenu(|project://smallsql/|));
 }
 
