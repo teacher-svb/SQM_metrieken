@@ -92,7 +92,7 @@ b= box(fillColor(color("green")));
 			
 			
 			if(s2cc<=10)
-				col = interpolateColor(color("lightgreen"), color("green"),(s2cc/10.0));
+				col = color("green");
 			else if(s2cc<=20)
 				col = interpolateColor(color("green"), color("yellow"),((s2cc-10)/10.0));
 			else if(s2cc<=50)
