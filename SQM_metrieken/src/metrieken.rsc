@@ -39,7 +39,7 @@ lrel[int moder, int high, int vhigh, int score] complexityScoreTable = [<25, 0, 
 map[int score, str scorename] scoreTranslation = (2: "++", 1: "+", 0: "0",-1: "-", -2: "--");
 
 public void printResults() {
-	loc project = |project://smallsql/|;
+	loc project = |project://hsqldb/|;
 	println(project);
 	
 	<extreme,high,moderate,avgComplexity>  = GetComplexity(project);
@@ -102,9 +102,9 @@ public void printResults() {
 }
 
 public void showDuplicationGraph() {
-	Figure duplicationGraph = createDuplicationGraph(|project://smallsql/|);
+	Figure duplicationGraph = createDuplicationGraph(|project://hsqldb/|);
 	render("Duplication Graph", duplicationGraph);
-	renderSave(duplicationGraph, |file:///C:/Users/somsg/Documents/GitHub/SQM_metrieken/SQM_metrieken/dupgraph.png|);
+	renderSave(duplicationGraph, |file:///D:/Projects/OU/SQM/SQM_metrieken/SQM_metrieken/dupgraph.png|);
 }
 
 public void showLLOCTreemaps() {

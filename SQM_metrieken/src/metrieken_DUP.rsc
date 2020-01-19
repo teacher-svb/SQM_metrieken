@@ -71,6 +71,8 @@ public Figure createDuplicationGraph(loc project) {
 	// each row is a list of figures
 	Figures figures = [];
 	
+	println([size(a) | a <- components]);
+	
 	int counter = 0;
 	// casting the list relation to a graph removed all the duplicates
 	// however, the duplicates indicate the amount of duplicate code in a relation or file
@@ -81,10 +83,13 @@ public Figure createDuplicationGraph(loc project) {
 		// find all relations that occur in the component (= subgraph) that also occur in the
 		// original list relation from which the graph was created
 		// this recaptures the duplicates
-		lrel[loc, loc] subgraphList = [<a,b> | <a, b> <- compFiles join compFiles, a != b];
+		//lrel[loc, loc] subgraphList = [<a,b> | <a, b> <- compFiles join compFiles, a != b];
 		
 		// create a graph from the subgraphlist, to easily convert to nodes and edges
-		Graph[loc] subgraph = {<a,b> | <a,b> <- subgraphList};
+		//Graph[loc] subgraph = {<a,b> | <a,b> <- compFiles join compFiles, a != b};
+		
+		
+		Graph[loc] subgraph = {<a,b> | <a,b> <- graphList, a != b, a in compFiles, b in compFiles};
         
         // construct nodes and edges from the subgraph and original graphlist (edge width)
 		nodes = [ ellipse(text(s.file), size(80), id(s.uri), lineWidth(size(subgraph[s]) + size(invert(subgraph)[s])), fillColor("yellow"))
@@ -99,6 +104,7 @@ public Figure createDuplicationGraph(loc project) {
 			figuresList += [figures];
 			figures = [];
 		}
+		print("*");
 	}
 	
 	Figure f = grid(figuresList);
