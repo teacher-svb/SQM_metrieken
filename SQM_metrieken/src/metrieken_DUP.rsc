@@ -80,15 +80,9 @@ public Figure createDuplicationGraph(loc project) {
 	// and match them to each component (= subgraph)
 	for (compFiles <- components) {
 		counter += 1;
-		// find all relations that occur in the component (= subgraph) that also occur in the
-		// original list relation from which the graph was created
-		// this recaptures the duplicates
-		//lrel[loc, loc] subgraphList = [<a,b> | <a, b> <- compFiles join compFiles, a != b];
-		
-		// create a graph from the subgraphlist, to easily convert to nodes and edges
-		//Graph[loc] subgraph = {<a,b> | <a,b> <- compFiles join compFiles, a != b};
-		
-		
+		// assemble the subgraph
+		// this is done by filtering all pairs from the original graphlist, and checking if both
+		// files of the pair exist in the list of files of the component
 		Graph[loc] subgraph = {<a,b> | <a,b> <- graphList, a != b, a in compFiles, b in compFiles};
         
         // construct nodes and edges from the subgraph and original graphlist (edge width)
