@@ -11,29 +11,39 @@ import lang::java::jdt::m3::Core;
 import lang::java::m3::AST;
 import util::Resources;
 
-public void metrieken_test2() {
-	//loc fileloc = |project://smallsql/src/smallsql/database/language/Language.java|;
-	loc fileloc = |project://smallsql/src/smallsql/junit/TestTokenizer.java|;
-	list[str] lines = readFileLines(fileloc);
-	list[str] result = [];
+public list[Declaration] getMethodsFromProject(loc project) {
 	
-	for (l <- lines) {
-		l = filterLine(l);
-		if (l != "") {
-			println(l);
-			result += l;
-		}
-	}
-	println(fileloc);
-	println(size(result));
-	
+   	set[loc] files = javaBestanden(project);
+   	
+	list[Declaration] result = [];
+   	for (f <- files) {	
+   		result += getMethods(f);
+   	}
+   	return result;
 }
 
-public void metrieken_test3() {
-	str l = "{ STXADD_COMMENT_OPEN			  , \"Missing end comment mark (\'\'*/\'\').\" },";
-	l = filterLine(l);
-	println("filtered:");
-	println(l);
+// TODO: use m3
+public list[Declaration] getMethods(loc file) {
+   	
+	list[Declaration] result = [];
+	Declaration decl = createAstFromFile(file, false);
+	
+	visit(decl) {
+		case \class(_, _, _, list[Declaration] body): {
+			for (b <- body) {
+				switch(b) {
+					case \method(_, _, _, _, _): {
+						result += b;
+					}
+					case \constructor(_, _, _, _): {
+						result += b;
+					}
+				}
+			}
+		}
+	}
+
+	return result;
 }
 
 

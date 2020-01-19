@@ -18,61 +18,82 @@ import analysis::graphs::Graph;
 import metrieken_util;
 
 
-
+/**
+	function calcDuplicationRatio
+	calculates the duplication ratio for a complete project
+	\return a percentage, comparing the number of duplicated lines vs the total number of lines to check for duplication
+*/
 public real calcDuplicationRatio(loc project) {
+	lrel[str, list[loc]] linesPer6 = toList(getBlocksOf6LinesWithFiles(project));
 	
-	lrel[loc location, str blocks] linesPer6 = getBlocksOf6Lines(project);
+	int totalBlocks = (0 | it + size(b) | <a, b> <- linesPer6);
 	
-	int dupSearchSize = size(linesPer6);
-	map[str, int] distr = distribution(linesPer6.blocks);
+	int dupSize = (0 | it + (size(b) > 1 ? size(b) : 0) | <a, b> <- linesPer6);
 	
-	int dupSize = (0 | it + (b > 1 ? b : 0) | <a, b> <- toRel(distr));
-	
-	real ratio = 100.0 * dupSize / dupSearchSize;
-	
+	real ratio = 100.0 * dupSize / totalBlocks;
 	return ratio;
 }
 
-public Figure showGraph(lrel[loc, loc] listrelation, lrel[loc, loc] listrelation2) {
-	Graph[loc] g = {<a,b> | <a,b> <- listrelation};
-
-   nodes = [ ellipse(text(s.file), size(80), id(s.uri), lineWidth(size(g[s]) + size(invert(g)[s])), fillColor("yellow"))
-           | s <- carrier(g)
-           ];
-   edges = [ edge(a.uri, b.uri, lineWidth((0 | it + 1 | c <- listrelation2, (c[0] == a && c[1] == b) || (c[0] == b && c[1] == a) )))
-           | <a, b> <- g
-           ];
-   return graph(nodes, edges, hint("layered"), std(size(30)), gap(40));
-}
-
+/**
+	function createDuplicationGraph
+	creates a graph figure that shows where duplicate code is located, and between what files this
+	duplicate code is shared.
+	\return a figure, where a graph with its components (= subgraphs) are layed out in a grid
+*/
 public Figure createDuplicationGraph(loc project) {
 	
 	map[str block, list[loc] locs] linesPer6WithFiles = getBlocksOf6LinesWithFiles(project);
 	println("blocks calculated");
 	
-	lrel[loc, loc] graph = [];
-	
+	// join the locations for every block with itself
+	// this creates a list relation where all locations of that block are connected with eachother
+	// (a list relation is used, so duplicates are maintained)
+	lrel[loc, loc] graphList = [];
 	for (files <- linesPer6WithFiles.locs) {
-		graph += [<a,b> | <a, b> <- files join files, a != b];
+		graphList += [<a,b> | <a, b> <- files join files, a != b];
 	}
 	println("graph assembled");
 	
-	Graph[loc] g = {<a,b> | <a,b> <- graph};
+	// cast the list relation to a graph
+	Graph[loc] g = {<a,b> | <a,b> <- graphList};
+	// deconstruct the graph into its components (= separating the 'subgraphs')
 	set[set[loc]] components = connectedComponents(g);
 	components = { a | a <- components, size(a) > 2};
 	println("graph deconstructed to components");
 	
+	// we want to show the subgraphs in a square grid, so we need to know how many subgraphs will be drawn
 	int numComps = size(components);
+	// the column size is the square root of the number of subgraphs
 	int colSize = ceil(sqrt(numComps));
 	
+	// a grid needs a list of a list of figures
 	list[Figures] figuresList = [];
+	// each row is a list of figures
 	Figures figures = [];
 	
 	int counter = 0;
-	for (files <- components) {
+	// casting the list relation to a graph removed all the duplicates
+	// however, the duplicates indicate the amount of duplicate code in a relation or file
+	// so now we recapture those duplicates, that occured in the original list relation
+	// and match them to each component (= subgraph)
+	for (compFiles <- components) {
 		counter += 1;
-		lrel[loc, loc] graph2 = [<a,b> | <a, b> <- files join files, a != b];
-		figures += showGraph(graph2, graph);
+		// find all relations that occur in the component (= subgraph) that also occur in the
+		// original list relation from which the graph was created
+		// this recaptures the duplicates
+		lrel[loc, loc] subgraphList = [<a,b> | <a, b> <- compFiles join compFiles, a != b];
+		
+		// create a graph from the subgraphlist, to easily convert to nodes and edges
+		Graph[loc] subgraph = {<a,b> | <a,b> <- subgraphList};
+        
+        // construct nodes and edges from the subgraph and original graphlist (edge width)
+		nodes = [ ellipse(text(s.file), size(80), id(s.uri), lineWidth(size(subgraph[s]) + size(invert(subgraph)[s])), fillColor("yellow"))
+				| s <- carrier(subgraph)];
+		edges = [ edge(a.uri, b.uri, lineWidth((0 | it + 1 | c <- graphList, (c[0] == a && c[1] == b) || (c[0] == b && c[1] == a) )))
+				| <a, b> <- subgraph];
+		        
+		Figure subgraphFigure = graph(nodes, edges, hint("layered"), std(size(30)), gap(40));
+		figures += subgraphFigure;
 		
 		if (counter % colSize == 0) {
 			figuresList += [figures];
@@ -84,31 +105,11 @@ public Figure createDuplicationGraph(loc project) {
 	return f;
 }
 
-
-public lrel[loc, str] getBlocksOf6Lines(loc project) {
-	set[loc] files = javaBestanden(project);
-	
-	lrel[loc location, str blocks] linesPer6 = [];
-	for (fileloc <- files) {
-		list[str] lines = readFileLines(fileloc);
-		list[str] result = [];
-		
-		for (l <- lines) {
-			l = filterLine(l);
-			if (l != "") {
-			
-				result += l;
-				if (size(result) >= 6) {
-					str resultstring = ("" | "<it><s>" | s <- result);
-					linesPer6 += <fileloc, resultstring>;
-					result = result[1..];
-				}
-			}
-		}
-	}
-	return linesPer6;
-}
-
+/**
+	function getBlocksOf6LinesWithFiles
+	deconstruct each file into blocks of 6 lines of code (using the same filter as PLOC)
+	for each block, assemble a list of locations where that block occurs
+*/
 public map[str, list[loc]] getBlocksOf6LinesWithFiles(loc project) {
 	set[loc] files = javaBestanden(project);
 	

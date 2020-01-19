@@ -14,12 +14,71 @@ import util::Resources;
 import metrieken_util;
 import metrieken_LOC;
 
+public int CalcOR(Expression exp){
+	int count =0;
+	visit(exp) {
+		case  \infix( _,  op,  _): {
+			if(op == "||") {
+				count += 1;
+			}
+		}
+	}
+	return count;
+}
 
-lrel[int, int] CyclComplexTable = [<11, 1>, <21, 2>, <51, 3>];
+public tuple[real extreme, 
+			 real high, 
+			 real moderate,
+			 real avgComplexity] GetComplexity(loc project) {
+   set[loc] files = javaBestanden(project);
+   
+	real total=0.0;
+	real moderate=0.0;
+	real high =0.0;
+	real extreme=0.0;
+	real agrComp =0.0;
+	real unitCount=0.0;
+	lrel[str method,loc src] source=[];
+	lrel[str methodname,int complexity] CC =[];
+   
+	for (file <- files) {
+		list[Declaration] methods = getMethods(file);
+		for (m <- methods) {
+	      	int count=CalcComplexity(m);
+			agrComp+=count;
+			unitCount+=1;
+			int totals = calcLLOC(m);
+			if(count >50) {
+				extreme+=totals;
+			}
+			else if(count>20) {
+				high+=totals;
+			}
+			else if(count>10) {	
+				moderate+=totals;
+			}
+			total+=totals;
+			source += <m.name, m.src>;
+			CC+=<m.name,count>;
+		}
+	}
 
-public int CalcComplexity(Statement impl) {
+   return <extreme * 100 / total, 
+   		   high * 100 / total, 
+   		   moderate * 100 / total, 
+   		   agrComp / unitCount>;
+}
+
+public tuple[int,int] calcLLOCvsComplexity(Declaration decl) {
+	int count = calcLLOC(decl);
+	int ccCount = CalcComplexity(decl);
+	
+	return <count,ccCount>;
+}
+
+public int CalcComplexity(Declaration decl) {
 	int count = 1;
-   	visit(impl) {  
+   	visit(decl) {  
 	 	case \if(condition, _): {
 	 		count+= CalcOR(condition);
 	 		count += 1;
@@ -54,118 +113,4 @@ public int CalcComplexity(Statement impl) {
 		}
    	}
    	return count;
-}
-public int CalcOR(Expression exp){
-int count =0;
-visit(exp){
-  case  \infix( _,  op,  _): {
-  	if(op=="||")
-      	count +=1;
-      	}
-}
-return count;
-}
-
-//public map[loc source, lrel[str methodname,int complexity] CC] printComplexity() {
-public tuple[real extreme, real high, real moderate,real avgComplexity] GetComplexity(loc project){
-   set[loc] files = javaBestanden(project);
-   set[Declaration] decls = createAstsFromFiles(files, false); 
-   
-  real total=0.0;
-  real moderate=0.0;
-  real high =0.0;
-  real extreme=0.0;
-   real agrComp =0.0;
-   real unitCount=0.0;
-   
-   lrel[str method,loc src] source=[];
-   lrel[str methodname,int complexity] CC =[];
-   visit(decls) {  
-      case \method(_, name, _, _, impl): {
-      	int count=CalcComplexity(impl);
-         agrComp+=count;
-         unitCount+=1;
-         int totals = calcLOC(impl);
-         if(count >50)
-         	extreme+=totals;
-         else if(count>20)
-         	high+=totals;
-         else if(count>10)	
-         	moderate+=totals;
-         total+=totals;
-         source += <name, impl.src>;
-         CC+=<name,count>;
-      
-      } 
-   }
-   //println("<extreme*100/total>,<high*100/total>,<moderate*100/total>,<total>");
-   return <extreme*100/total,high*100/total,moderate*100/total,agrComp/unitCount>;
-}
-
-public int calcLOC(Statement decl) {
-	int count = 0;
-	visit(decl) {  
-		case \declarationStatement(_): {
-         	count+=1;
-      	} 
-  		case \expressionStatement(_): {
-     		count+=1;
-  		} 
-  		case \return(_): {
-     		count+=1;
-  		} 
-  		case \return(): {
-     		count+=1;
-  		} 
-  		case \break(_): {
-     		count+=1;
-  		} 
-  		case \break(): {
-     		count+=1;
-  		} 
-  		case \continue(_): {
-     		count+=1;
-  		} 
-  		case \continue(): {
-     		count+=1;
-  		} 
-  		case \constructorCall(_, _, _): {
-     		count+=1;
-  		} 
-  		case \constructorCall(_, _): {
-     		count+=1;
-  		} 
-		
-		case \field(_, _): {
-			count += 1;
-		}
-		case \initializer(_): {
-			count += 1;
-		}
-		
-		case \block(_): {
-			count += 1;
-		}
-
-		case \switch(_, _): {
-			count += 1;
-		}
-		
-		case \throw(_): {
-			count += 1;
-		}
-		case \try(_, _): {
-			count += 1;
-		}
-		case \try(_, _, _): {
-			count += 1;
-		}                                        
-		case \catch(_, _): {
-			count += 1;
-		}
-		case \foreach(_,_,_):{
-			count += 1;
-		}
-	}
-	return count;
 }

@@ -20,6 +20,7 @@ import vis::KeySym;
 import metrieken_LOC;
 import metrieken_DUP;
 import metrieken_CC;
+import metrieken_util;
 
 lrel[int, int] volumeScoreTable = [<0, 2>, <66, 1>, <246, 0>, <665, -1>, <1310, -2>];
 
@@ -45,7 +46,7 @@ public void printResults() {
 	
 	int projectPLOC = (0 | it + b | <a,b> <- calcPLOCForProjectFiles(project));
 	int projectLLOC = (0 | it + b | <a,b> <- calcLLOCForProjectFiles(project));
-	list[Declaration] methods = getMethods(project);
+	list[Declaration] methods = getMethodsFromProject(project);
 	int numUnits = size(methods);
 	real avgUnitPLOC = (0.0 | it + calcPLOC(m.src) | m <- methods) / numUnits;
 	real avgUnitLLOC = (0.0 | it + calcLLOC(m) | m <- methods) / numUnits;

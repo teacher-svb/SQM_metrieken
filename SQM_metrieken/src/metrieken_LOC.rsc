@@ -16,6 +16,7 @@ import vis::Render;
 import vis::KeySym;
 
 import metrieken_util;
+import metrieken_CC;
 
 
 
@@ -142,35 +143,6 @@ b= box(fillColor(color("green")));
 	return treemap(figures);
 }
 
-
-// TODO: use m3
-public list[Declaration] getMethods(loc file) {
-	
-   	set[loc] files = javaBestanden(file);
-   	
-	list[Declaration] result = [];
-   	for (f <- files) {	
-		Declaration decl = createAstFromFile(f, false);
-		
-		visit(decl) {
-			case \class(_, _, _, list[Declaration] body): {
-				for (b <- body) {
-					switch(b) {
-						case \method(_, _, _, _, _): {
-							result += b;
-						}
-						case \constructor(_, _, _, _): {
-							result += b;
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	return result;
-}
-
 /**
 	function calcLLOCForMethods
 	calculates the amount of Logical Lines Of Code for each method in a set of locations.
@@ -186,10 +158,10 @@ public lrel[loc, tuple[int LLOC,int CC]] calcCCForMethods(set[loc] files) {
 				for (b <- body) {
 					switch(b) {
 						case \method(_, _, _, _, _): {
-							methodLLOCs += <b.src, calcCC(b)>;
+							methodLLOCs += <b.src, calcLLOCvsComplexity(b)>;
 						}
 						case \constructor(_, _, _, _): {
-							methodLLOCs += <b.src, calcCC(b)>;
+							methodLLOCs += <b.src, calcLLOCvsComplexity(b)>;
 						}
 					}
 				}
@@ -202,28 +174,9 @@ public lrel[loc, int] calcLLOCForMethods(set[loc] files) {
 	lrel[loc, int] methodLLOCs = [];
 	
 	for (a <- files) { 
-		/*list[Declaration] methods = getMethods(a);
-		
+		list[Declaration] methods = getMethods(a);
 		for (m <- methods) {
-		
-			methodLLOCs += <m.src,calcLLOC(m)>;
-		}*/
-		
-		Declaration decl = createAstFromFile(a, false);
-		
-		visit(decl) {
-			case \class(_, _, _, list[Declaration] body): {
-				for (b <- body) {
-					switch(b) {
-						case \method(_, _, _, _, _): {
-							methodLLOCs += <b.src, calcLLOC(b)>;
-						}
-						case \constructor(_, _, _, _): {
-							methodLLOCs += <b.src, calcLLOC(b)>;
-						}
-					}
-				}
-			}
+			methodLLOCs += <b.src, calcLLOC(b)>;
 		}
 	}
 	return methodLLOCs;
@@ -351,121 +304,4 @@ public int calcLLOC(Declaration decl) {
 		}
 	}
 	return count;
-}
-public int CalcOR(Expression exp){
-int count =0;
-visit(exp){
-  case  \infix( _,  op,  _): {
-  	if(op=="||")
-      	count +=1;
-      	}
-}
-return count;
-}
-public tuple[int,int] calcCC(Declaration decl) {
-	int count = 0;
-	int ccCount=0;
-	visit(decl) {  
-		case \declarationStatement(_): {
-         	count+=1;
-      	} 
-  		case \expressionStatement(_): {
-     		count+=1;
-  		} 
-  		case \return(_): {
-     		count+=1;
-  		} 
-  		case \return(): {
-     		count+=1;
-  		} 
-  		case \break(_): {
-     		count+=1;
-  		} 
-  		case \break(): {
-     		count+=1;
-  		} 
-  		case \continue(_): {
-     		count+=1;
-  		} 
-  		case \continue(): {
-     		count+=1;
-  		} 
-  		case \constructorCall(_, _, _): {
-     		count+=1;
-  		} 
-  		case \constructorCall(_, _): {
-     		count+=1;
-  		} 
-		case \method(_, _, _, _,_): {
-			count += 1;
-		}
-		case \field(_, _): {
-			count += 1;
-		}
-		case \initializer(_): {
-			count += 1;
-		}
-		
-		case \block(_): {
-			count += 1;
-		}
-
-		case \switch(_, _): {
-			count += 1;
-		}
-		case \class(_): {
-			count += 1;
-		}
-		case \class(_, _, _, _): {
-			count += 1;
-		}
-		case \interface(_, _, _, _): {
-			count += 1;
-		}
-		case \throw(_): {
-			count += 1;
-		}
-		case \try(_, _): {
-			count += 1;
-		}
-		case \try(_, _, _): {
-			count += 1;
-		}                                        
-		case \catch(_, _): {
-			count += 1;
-		}
-	 	case \if(condition, _): {
-	 		ccCount+= CalcOR(condition);
-	 		ccCount += 1;
-		}
-	 	case \if(condition, _, _): {
-	 		ccCount+= CalcOR(condition);
-	 		ccCount += 2;
-		}
-	 	case \while(_, body): {
-	 		ccCount += 1;
-		}
-	 	case \foreach(_, _, body): {
-	 		ccCount += 1;
-		}
-	 	case \for(_, _, _, body): {
-	 		ccCount += 1;
-		}
-	 	case \for(_, _, body): {
-	 		ccCount += 1;
-		}
-		case \foreach(_,_,_):{
-			ccCount += 1;
-		}
-	 	case \do(body, _): {
-	 		ccCount += 1;
-		}
-		case \case(expr): {
-			ccCount += 1;
-		}
-		case \defaultCase(): {
-			ccCount += 1;
-		}
-	}
-	return <count,ccCount>;
 }
