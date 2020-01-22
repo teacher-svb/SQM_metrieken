@@ -24,7 +24,7 @@ import metrieken_util;
 
 lrel[int, int] volumeScoreTable = [<0, 2>, <66, 1>, <246, 0>, <665, -1>, <1310, -2>];
 
-lrel[int, int] unitSizeScoreTable = [<0, 2>, <30, 1>, <44, 0>, <74, -1>];
+//lrel[int, int] unitSizeScoreTable = [<0, 2>, <30, 1>, <44, 0>, <74, -1>];
 
 lrel[int, int] duplicityScoreTable = [<3, 2>, <5, 1>, <10, 0>, <20, -1>, <100, -2>];
 
@@ -35,14 +35,17 @@ list[int] complexityScoreTableModerate = [0, 25, 30, 45, 50];
 list[int] complexityScoreTableHigh = [0, 5, 10, 15];
 list[int] complexityScoreTableVeryHigh = [0, 5];
 lrel[int moder, int high, int vhigh, int score] complexityScoreTable = [<25, 0, 0, 2>, <30, 5, 0, 1>, <45, 10, 0, 0>, <50, 15, 5, -1>, <100, 100, 100, -2>];
+lrel[int moder, int high, int vhigh, int score] unitSizeScoreTable = [<25, 0, 0, 2>, <30, 5, 0, 1>, <45, 10, 0, 0>, <50, 15, 5, -1>, <100, 100, 100, -2>];
 
 map[int score, str scorename] scoreTranslation = (2: "++", 1: "+", 0: "0",-1: "-", -2: "--");
 
 public void printResults() {
-	loc project = |project://hsqldb/|;
+	loc project = |project://smallsql/|;
 	println(project);
 	
 	<extreme,high,moderate,avgComplexity>  = GetComplexity(project);
+	
+	<usExtreme,usHigh,usModerate,avgUnitSize>  = GetUnitSize(project);
 	
 	int projectPLOC = (0 | it + b | <a,b> <- calcPLOCForProjectFiles(project));
 	int projectLLOC = (0 | it + b | <a,b> <- calcLLOCForProjectFiles(project));
@@ -58,8 +61,7 @@ public void printResults() {
 	
    	println("lines of code (PLOC|LLOC): <projectPLOC> | <projectLLOC>");
    	println("number of units: <numUnits>");
-   	println("average unit size (PLOC): <avgUnitPLOC>");
-   	println("average unit size (LLOC): <avgUnitLLOC>");
+   	println("average unit size (PLOC|LLOC): <avgUnitPLOC> | <avgUnitLLOC>");
    	println("average unit complexity: <avgUnitComplexity>");
    	println("duplication: <projectDuplication>%");
    	
@@ -68,25 +70,35 @@ public void printResults() {
 	real ratioModerateUnitComplexity =  extreme;
 	real ratioHighUnitComplexity =  high;
 	real ratioVeryHighUnitComplexity = moderate;
+   	
+	real ratioModerateUnitSize =  usExtreme;
+	real ratioHighUnitSize =  usHigh;
+	real ratioVeryHighUnitSize = usModerate;
 
-	
+	// divide by 1000, as the score table is determined in kilo-LOC, not LOC
    	int volumePLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectPLOC/1000])[1];
    	int volumeLLOCScore = max([<a,b> | <a, b> <- volumeScoreTable, a <= projectLLOC/1000])[1];
-   	int unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitPLOC])[1];
-   	int unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitLLOC])[1];
+   	//int unitSizePLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitPLOC])[1];
+   	//int unitSizeLLOCScore = max([<a,b> | <a, b> <- unitSizeScoreTable, a <= avgUnitLLOC])[1];
    	int complexityScore = min([<a,b,c,d> | <a,b,c,d> <- complexityScoreTable, 
    										   a >= ratioModerateUnitComplexity && 
    										   b >= ratioHighUnitComplexity && 
    										   c >= ratioVeryHighUnitComplexity])[3];
+   										   
+   	int unitSizeScore = min([<a,b,c,d> | <a,b,c,d> <- unitSizeScoreTable, 
+   										   a >= ratioModerateUnitSize && 
+   										   b >= ratioHighUnitSize && 
+   										   c >= ratioVeryHighUnitSize])[3];
+   										   
    	int duplicationScore = min([<a,b> | <a, b> <- duplicityScoreTable, a >= projectDuplication])[1];
 
-   	int analyseScore = toInt((volumeLLOCScore + duplicationScore + unitSizeLLOCScore) / 3.0); // volume + duplication + avg unit size
+   	int analyseScore = toInt((volumeLLOCScore + duplicationScore + unitSizeScore) / 3.0); // volume + duplication + avg unit size
    	int changeScore = toInt((complexityScore + duplicationScore) / 2.0); // complexity + duplication
-   	int testScore = toInt((complexityScore + unitSizeLLOCScore) / 3.0); // complexity + avg unit size
+   	int testScore = toInt((complexityScore + unitSizeScore) / 3.0); // complexity + avg unit size
    	int maintainScore = toInt((analyseScore + changeScore + testScore) / 3.0); // analyse + change + test
    	
    	println("volume score (PLOC|LLOC): <scoreTranslation[volumePLOCScore]> | <scoreTranslation[volumePLOCScore]>");
-	println("unit size score (PLOC|LLOC): <scoreTranslation[unitSizePLOCScore]> | <scoreTranslation[unitSizeLLOCScore]>");
+	println("unit size score: <scoreTranslation[unitSizeScore]>");
 	println("unit complexity score: <scoreTranslation[complexityScore]>");
 	println("duplication score: <scoreTranslation[duplicationScore]>");
    	
@@ -99,6 +111,48 @@ public void printResults() {
    	println();
 	
 	println("overall maintainability score: <scoreTranslation[maintainScore]>");
+}
+
+public tuple[real extreme, 
+			 real high, 
+			 real moderate,
+			 real avgUnitSize] GetUnitSize(loc project) {
+   set[loc] files = javaBestanden(project);
+   
+	real total=0.0;
+	real moderate=0.0;
+	real high =0.0;
+	real extreme=0.0;
+	real agrUnitSize =0.0;
+	real unitCount=0.0;
+	lrel[str method,loc src] source=[];
+	lrel[str methodname,int complexity] CC =[];
+   
+	for (file <- files) {
+		list[Declaration] methods = getMethods(file);
+		for (m <- methods) {
+			int count = calcPLOC(m.src);
+			agrUnitSize+=count;
+			unitCount+=1;
+			if(count >74) {
+				extreme+=count;
+			}
+			else if(count>44) {
+				high+=count;
+			}
+			else if(count>30) {	
+				moderate+=count;
+			}
+			total+=count;
+			source += <m.name, m.src>;
+			CC+=<m.name,count>;
+		}
+	}
+
+   return <extreme * 100 / total, 
+   		   high * 100 / total, 
+   		   moderate * 100 / total, 
+   		   agrUnitSize / unitCount>;
 }
 
 public void showDuplicationGraph() {

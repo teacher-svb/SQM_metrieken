@@ -26,8 +26,11 @@ import metrieken_util;
 public real calcDuplicationRatio(loc project) {
 	lrel[str, list[loc]] linesPer6 = toList(getBlocksOf6LinesWithFiles(project));
 	
+	// very confusing, but true: it is not an iterator! it is just a counter variable :-)
+	// add up the number of times any block of 6 lines occurs in the code
 	int totalBlocks = (0 | it + size(b) | <a, b> <- linesPer6);
 	
+	// add up the number of times any block of 6 lines occurs in the code, if it occurs more than once
 	int dupSize = (0 | it + (size(b) > 1 ? size(b) : 0) | <a, b> <- linesPer6);
 	
 	real ratio = 100.0 * dupSize / totalBlocks;
